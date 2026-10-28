@@ -12,7 +12,7 @@ const UNLINK = 3.4;        // une molécule formée ne se casse qu'au-delà (év
 const MOVE_SPEED = 7;      // vitesse à laquelle les atomes rejoignent leur place
 const LIFT = 0.05;         // jeu entre les sphères et le repère
 const LABEL_GAP = 0.32;    // distance entre la sphère et son symbole posé à plat
-const LABEL_W = 0.75, LABEL_H = 0.47;
+const LABEL_W = 1.05, LABEL_H = 0.66;
 
 function symbolTexture(symbol) {
   const cv = document.createElement('canvas');
@@ -81,11 +81,12 @@ export class MoleculeView {
     sphere.scale.setScalar(r);
     obj.add(sphere);
     // Symbole couché sur le plan du repère, devant (lisible de face) et derrière (lisible de l'autre côté).
+    // Il est au niveau de la table : une grosse sphère ne le cache pas.
     const labelMat = new THREE.MeshBasicMaterial({ map: this.tex[el], transparent: true, depthWrite: false });
     const front = new THREE.Mesh(this.geo.label, labelMat);
-    front.position.set(0, -(r + LABEL_GAP), 0);
+    front.position.set(0, -(r + LABEL_GAP), -r);
     const back = new THREE.Mesh(this.geo.label, labelMat);
-    back.position.set(0, r + LABEL_GAP, 0);
+    back.position.set(0, r + LABEL_GAP, -r);
     back.rotation.z = Math.PI;
     obj.add(front, back);
     obj.scale.setScalar(0.001);

@@ -1,0 +1,190 @@
+:root {
+  --bg: #0d1424;
+  --ink: #f4f6fb;
+  --ink-soft: #b9c2d6;
+  --accent: #39a0ff;
+  --proton: #ff2a2a;
+  --neutron: #1fcf4a;
+  --electron: #1e6dff;
+  --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font); font-weight: 600;
+  touch-action: manipulation;              /* pas de zoom au double appui */
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button, a.btn { font: inherit; touch-action: manipulation; }
+
+/* ===== Écrans ===== */
+.screen {
+  position: fixed; inset: 0; display: none;
+  align-items: center; justify-content: center;
+  padding: 16px;
+  background: radial-gradient(ellipse at 50% 30%, #1d2b4f 0%, var(--bg) 70%);
+}
+.screen--active { display: flex; }
+
+/* ===== Fenêtres (fond sombre transparent) ===== */
+.panel {
+  width: min(440px, 100%);
+  padding: 26px 22px;
+  border-radius: 22px;
+  background: rgba(8, 12, 24, .72);
+  border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .45);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  text-align: center;
+}
+.panel[hidden] { display: none; }
+.panel h1, .panel h2 { margin: 0 0 12px; font-weight: 800; }
+.panel h1 { font-size: 1.7rem; }
+.panel h2 { font-size: 1.35rem; }
+.panel p { margin: 0 0 14px; line-height: 1.45; color: var(--ink-soft); }
+.panel p strong { color: var(--ink); }
+.panel__marker { width: 110px; height: 110px; margin: 4px auto 18px; display: block; border-radius: 6px; }
+.panel__tip { font-size: .92rem; }
+.panel__actions { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 12px; }
+.panel__actions:last-child { margin-bottom: 0; }
+
+.btn {
+  display: block; width: 100%;
+  padding: 13px 18px; border-radius: 14px; border: none;
+  background: rgba(255, 255, 255, .1); color: var(--ink);
+  font-size: 1.05rem; font-weight: 700; text-decoration: none; text-align: center;
+  cursor: pointer; transition: transform .1s, background .2s;
+}
+.btn:active { transform: scale(.97); }
+.btn--main { background: linear-gradient(180deg, #4fb0ff, #1f78e6); box-shadow: 0 4px 14px rgba(31, 120, 230, .45); }
+.btn--ghost { background: transparent; color: var(--ink-soft); }
+
+/* ===== Menu des vues ===== */
+.menu { width: min(440px, 100%); display: flex; flex-direction: column; gap: 14px; }
+.menu h2 { margin: 0 0 4px; text-align: center; font-size: 1.4rem; font-weight: 800; }
+.menu__back { margin-top: 6px; }
+
+.view-btn {
+  display: flex; align-items: center; gap: 16px;
+  width: 100%; padding: 16px 18px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(8, 12, 24, .72); color: var(--ink);
+  font-size: 1.3rem; font-weight: 800; text-align: left; cursor: pointer;
+  transition: transform .1s;
+}
+.view-btn:active:not(:disabled) { transform: scale(.97); }
+.view-btn__icon { flex: none; width: 56px; height: 56px; color: #8fd4ff; }
+.view-btn__icon svg { width: 100%; height: 100%; }
+.view-btn--atom { background: linear-gradient(135deg, rgba(30, 109, 255, .35), rgba(8, 12, 24, .72) 70%); }
+.view-btn--molecule { background: linear-gradient(135deg, rgba(255, 42, 42, .3), rgba(8, 12, 24, .72) 70%); }
+.view-btn--soon { opacity: .55; cursor: default; flex-wrap: wrap; }
+.view-btn--soon .view-btn__icon { color: var(--ink-soft); }
+.view-btn__soon { margin-left: auto; font-size: .85rem; font-weight: 700; font-style: italic; color: var(--ink-soft); }
+
+/* ===== Vue en réalité augmentée ===== */
+.screen--ar { padding: 0; background: #000; }
+.ar-video, .ar-layer, .ar-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ar-video { object-fit: cover; }
+.ar-layer { transition: opacity .4s; pointer-events: none; }
+.ar-layer.is-hidden { opacity: 0; }
+
+.ar-search {
+  position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 18px 22px; border-radius: 18px;
+  background: rgba(8, 12, 24, .7); text-align: center;
+  transition: opacity .3s; pointer-events: none;
+}
+.ar-search img[hidden] { display: none; }
+.ar-search img { width: 64px; height: 64px; border-radius: 4px; animation: search 1.6s ease-in-out infinite; }
+.ar-search.is-hidden { opacity: 0; }
+@keyframes search { 50% { transform: scale(.85) rotate(-6deg); } }
+
+.ar-top {
+  position: absolute; left: 0; right: 0; top: 0;
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) 12px 0;
+}
+.chip {
+  padding: 9px 14px; border-radius: 999px; border: none;
+  background: rgba(8, 12, 24, .7); color: var(--ink);
+  font-size: .95rem; font-weight: 700; cursor: pointer;
+}
+.chip[hidden] { display: none; }
+
+/* Fiche flottante au-dessus de l'atome */
+.card {
+  position: absolute; left: 0; top: 0;
+  min-width: 118px; padding: 8px 14px 9px;
+  border-radius: 14px; text-align: center;
+  background: rgba(255, 255, 255, .92); color: #14203a;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  will-change: transform;
+}
+.card:empty { display: none; }
+.card__name { font-size: .95rem; font-weight: 800; white-space: nowrap; }
+.card__formula { display: flex; align-items: center; justify-content: center; margin: 2px 0 1px; }
+.card__nota { display: flex; flex-direction: column; align-items: flex-end; font-size: .8rem; line-height: 1.05; margin-right: 2px; }
+.card__sym { font-size: 2rem; font-weight: 800; line-height: 1; }
+.card__charge { align-self: flex-start; font-size: 1rem; font-weight: 800; margin-left: 1px; }
+.card__charge--pos { color: #d81f1f; }
+.card__charge--neg { color: #1650d8; }
+.card__status { font-size: .8rem; font-weight: 700; }
+.card__status--ok { color: #1a8a3a; }
+.card__status--pos { color: #d81f1f; }
+.card__status--neg { color: #1650d8; }
+.card__noion { margin-top: 4px; font-size: .95rem; font-weight: 700; font-style: italic; color: #8a93a6; white-space: nowrap; }
+
+/* Formule et nom flottant au-dessus d'une molécule */
+.mol-label {
+  position: absolute; left: 0; top: 0;
+  padding: 6px 12px 7px; border-radius: 12px; text-align: center;
+  background: rgba(255, 255, 255, .92); color: #14203a;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  white-space: nowrap; will-change: transform;
+  animation: label-in .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+.mol-label__formula { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
+.mol-label__name { font-size: .8rem; font-weight: 700; color: #4a5770; }
+@keyframes label-in { from { opacity: 0; scale: .6; } }
+
+/* Commandes : ▲ + / nom (nombre) / ▼ − */
+.ar-controls {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: center; gap: 10px;
+  padding: 10px 10px max(14px, env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, rgba(0, 0, 0, .45));
+}
+.ctrl { flex: 1; max-width: 150px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ctrl--p { --c: var(--proton); }
+.ctrl--n { --c: var(--neutron); }
+.ctrl--e { --c: var(--electron); }
+.ctrl__label {
+  width: 100%; padding: 6px 4px; border-radius: 10px;
+  background: rgba(8, 12, 24, .78); border: 2px solid var(--c);
+  font-size: .9rem; font-weight: 800; text-align: center; white-space: nowrap;
+}
+.ctrl__btn {
+  position: relative; width: 74px; height: 50px; padding: 0; border: none; cursor: pointer;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .45), transparent 55%), var(--c);
+  color: #fff; font-size: 1.5rem; font-weight: 900; line-height: 1;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45));
+  transition: transform .08s;
+}
+.ctrl__btn--up { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.ctrl__btn--down { clip-path: polygon(0 0, 100% 0, 50% 100%); background: linear-gradient(0deg, rgba(0, 0, 0, .25), transparent 55%), var(--c); }
+.ctrl__btn span { position: absolute; left: 0; right: 0; text-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+.ctrl__btn--up span { bottom: 6px; }
+.ctrl__btn--down span { top: 4px; }
+.ctrl__btn:active:not(:disabled) { transform: scale(.9); }
+.ctrl__btn:disabled { opacity: .3; cursor: default; }
+
+@media (max-width: 360px) {
+  .ctrl__label { font-size: .78rem; }
+  .ctrl__btn { width: 62px; height: 44px; }
+}

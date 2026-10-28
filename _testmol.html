@@ -1,0 +1,41 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
+<script src="lib/aruco/cv.js"></script><script src="lib/aruco/svd.js"></script>
+<script src="lib/aruco/posit1.js"></script><script src="lib/aruco/aruco.js"></script>
+</head><body>
+<section class="screen screen--ar screen--active" id="screen-ar">
+  <canvas class="ar-video" id="fake"></canvas>
+  <div class="ar-layer is-hidden" id="ar-layer"><canvas class="ar-canvas" id="ar-canvas"></canvas><div class="card" id="ar-card"></div></div>
+</section>
+<pre id="out" style="position:fixed;top:0;left:0;color:#0f0;z-index:9;font-size:12px;background:#0008"></pre>
+<script type="module">
+import { ArStage } from './js/ar.js';
+import { MoleculeView } from './js/molecule-view.js';
+const q = new URLSearchParams(location.search);
+const fake = document.getElementById('fake'); fake.width = 1280; fake.height = 720;
+const ctx = fake.getContext('2d'); ctx.fillStyle = '#c8b89a'; ctx.fillRect(0, 0, 1280, 720);
+const dic = new AR.Dictionary('ARUCO_MIP_36h12');
+// placements "id:X:Y" en cm sur la table ; repère de 3,4 cm (+ marge blanche)
+const items = (q.get('m') || '1:-4:0,2:4:0,15:0:-1,9:14:6').split(',').map(s => s.split(':').map(Number));
+const tilt = 50 * Math.PI / 180, f = 0.85 * 1280, Z0 = 45, S = 3.4 * 10 / 8;
+for (const [id, X, Y] of items) {
+  const img = new Image(); img.src = 'data:image/svg+xml,' + encodeURIComponent(dic.generateSVG(id)); await img.decode();
+  const c2 = document.createElement('canvas'); c2.width = c2.height = 200; const x2 = c2.getContext('2d'); x2.imageSmoothingEnabled = false; x2.drawImage(img, 0, 0, 200, 200);
+  const N = 200;
+  for (let r = 0; r < N; r++) {
+    const v = S / 2 - r / N * S, v2 = S / 2 - (r + 1) / N * S;
+    const P = (u, vv) => { const yt = Y + vv; const z = Z0 + yt * Math.sin(tilt); return [640 + f * (X + u) / z, 420 - f * yt * Math.cos(tilt) / z]; };
+    const [xl, y] = P(-S / 2, v), [xr] = P(S / 2, v), [, y2] = P(-S / 2, v2);
+    ctx.drawImage(c2, 0, r * 200 / N, 200, 200 / N, xl, y, xr - xl, y2 - y + 0.6);
+  }
+}
+const out = document.getElementById('out');
+const stage = new ArStage({ root: document.getElementById('screen-ar'), video: fake, layer: document.getElementById('ar-layer'), canvas: document.getElementById('ar-canvas') });
+stage.start(fake); const of = () => { window.__f = (window.__f||0) + 1; requestAnimationFrame(of); }; of();
+const view = new MoleculeView(stage, { card: document.getElementById('ar-card'), controls: null, layer: document.getElementById('ar-layer') });
+setTimeout(() => {
+  out.textContent = 'frames=' + (window.__f||0) + ' opac=' + [...view.atoms.values()].map(a => a.el + a.labelMat.opacity.toFixed(2)).join(' ') + ' || markers=' + [...stage.markers.keys()].join(',') + '\n' +
+    [...document.querySelectorAll('.mol-label')].map(l => l.innerText.replace(/\n/g, ' ')).join(' | ');
+}, 2500);
+</script></body></html>

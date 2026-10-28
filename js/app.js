@@ -1,11 +1,11 @@
 // app.js
-// Navigation : accueil (repère) -> choix de la vue -> vue en réalité augmentée.
+// Navigation : accueil (choix du module) -> vue en réalité augmentée.
 // La vue ne s'ouvre que si la caméra est accessible.
 import { ArStage, cameraAvailable, startCamera, stopCamera, listCameras } from './ar.js';
 import { AtomView } from './atom-view.js';
-import { MoleculeView } from './molecule-view.js';
+import { ReactionView } from './reaction-view.js';
 
-const VIEWS = { atom: AtomView, molecule: MoleculeView };
+const VIEWS = { atom: AtomView, reaction: ReactionView };
 const SEARCH_TEXT = 'Montre le repère à la caméra';
 const $ = id => document.getElementById(id);
 
@@ -13,10 +13,6 @@ let stage = null, view = null, pendingView = null, cameraId = null;
 
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.toggle('screen--active', s.id === 'screen-' + name));
-}
-
-function showStep(step) {
-  document.querySelectorAll('#screen-home [data-step]').forEach(p => { p.hidden = p.dataset.step !== step; });
 }
 
 function cameraErrorText(err) {
@@ -61,6 +57,7 @@ async function openView(name) {
   const View = VIEWS[name];
   $('ar-search-text').textContent = View.searchText || SEARCH_TEXT;
   $('ar-search-img').hidden = View.searchImage === false;
+  $('ar-search-link').hidden = !View.searchLink;
   stage.start();
   view = new View(stage, { card: $('ar-card'), controls: $('ar-controls'), layer: $('ar-layer') });
   updateCameraSwitch();
@@ -102,12 +99,9 @@ document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]');
   if (go) {
     closeView();
-    if (go.dataset.go === 'home') showStep('welcome');
     showScreen(go.dataset.go);
     return;
   }
-  const step = e.target.closest('[data-step-go]');
-  if (step) return showStep(step.dataset.stepGo);
   const v = e.target.closest('[data-view]');
   if (v) openView(v.dataset.view);
 });

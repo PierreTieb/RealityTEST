@@ -95,6 +95,8 @@ function makeTrails(maxPoints) {
 }
 
 export class AtomView {
+  static searchLink = true;   // lien pour télécharger le repère universel sous « Montre le repère »
+
   // ui : { card, controls }
   constructor(stage, ui) {
     this.stage = stage;

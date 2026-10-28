@@ -3,10 +3,13 @@
   --ink: #f4f6fb;
   --ink-soft: #b9c2d6;
   --accent: #39a0ff;
-  --proton: #ff2a2a;
-  --neutron: #1fcf4a;
-  --electron: #1e6dff;
-  --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  /* pastels des particules, comme dans « Les Bases de la chimie » */
+  --proton: linear-gradient(160deg, #F58A87, #E0554F);
+  --neutron: linear-gradient(160deg, #7ED3A3, #43A874);
+  --electron: linear-gradient(160deg, #8FA9F0, #5677D9);
+  --font-display: 'Fredoka', 'Nunito', system-ui, sans-serif;
+  --font: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius-lg: 26px;
 }
 
 * { box-sizing: border-box; }
@@ -66,26 +69,50 @@ button, a.btn { font: inherit; touch-action: manipulation; }
 .btn--main { background: linear-gradient(180deg, #4fb0ff, #1f78e6); box-shadow: 0 4px 14px rgba(31, 120, 230, .45); }
 .btn--ghost { background: transparent; color: var(--ink-soft); }
 
-/* ===== Menu des vues ===== */
-.menu { width: min(440px, 100%); display: flex; flex-direction: column; gap: 14px; }
-.menu h2 { margin: 0 0 4px; text-align: center; font-size: 1.4rem; font-weight: 800; }
-.menu__back { margin-top: 6px; }
-
-.view-btn {
-  display: flex; align-items: center; gap: 16px;
-  width: 100%; padding: 16px 18px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, .14);
-  background: rgba(8, 12, 24, .72); color: var(--ink);
-  font-size: 1.3rem; font-weight: 800; text-align: left; cursor: pointer;
-  transition: transform .1s;
+/* ===== Accueil (même présentation que les autres applis) : tableau noir couvert de figures à la craie, une carte par module ===== */
+.screen--home {
+  align-items: flex-start; overflow: auto;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(32px + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(255, 255, 255, .06), transparent 45%),
+    radial-gradient(ellipse at 80% 70%, rgba(255, 255, 255, .05), transparent 50%),
+    linear-gradient(180deg, #232a2e, #171c1f);
+  -webkit-user-select: none; user-select: none;
 }
-.view-btn:active:not(:disabled) { transform: scale(.97); }
-.view-btn__icon { flex: none; width: 56px; height: 56px; color: #8fd4ff; }
-.view-btn__icon svg { width: 100%; height: 100%; }
-.view-btn--atom { background: linear-gradient(135deg, rgba(30, 109, 255, .35), rgba(8, 12, 24, .72) 70%); }
-.view-btn--molecule { background: linear-gradient(135deg, rgba(255, 42, 42, .3), rgba(8, 12, 24, .72) 70%); }
-.view-btn--soon { opacity: .55; cursor: default; flex-wrap: wrap; }
-.view-btn--soon .view-btn__icon { color: var(--ink-soft); }
-.view-btn__soon { margin-left: auto; font-size: .85rem; font-weight: 700; font-style: italic; color: var(--ink-soft); }
+#home-bg { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+#home-bg svg { display: block; }
+#home-bg .v { marker-end: url(#arrow); }
+#home-bg text { fill: #f4f4ee; stroke: none; font: italic 15px Georgia, 'Times New Roman', serif; }
+.home-in { position: relative; width: 100%; max-width: 560px; margin: auto 0; }
+.app-title {
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(1.8rem, 7vw, 2.5rem); line-height: 1.12;
+  text-align: center; margin: 14px 0 10px; color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, .6);
+}
+.app-subtitle { text-align: center; color: #D5DDE2; font-weight: 700; font-size: 1rem; line-height: 1.35; margin: 0 auto 26px; max-width: 34ch; text-shadow: 0 1px 6px rgba(0, 0, 0, .7); }
+/* Un module = sa carte + à côté, un petit bouton pour télécharger ses repères */
+.module { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 22px; }
+.module .q-card { flex: 1; min-width: 0; margin: 0; }
+.dl-btn {
+  flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin-top: 8px;
+  border-radius: 14px; background: #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 6px 14px rgba(0, 0, 0, .3);
+  transition: transform .12s, box-shadow .12s;
+}
+.dl-btn svg { width: 32px; height: 32px; }
+.dl-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 3px 8px rgba(0, 0, 0, .3); }
+.dl-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.q-card {
+  display: flex; flex-direction: column; align-items: stretch; width: 100%; margin: 0 0 22px; padding: 0 0 18px;
+  border: none; border-radius: var(--radius-lg); overflow: hidden; text-align: left; color: #fff; cursor: pointer;
+  font-family: var(--font); box-shadow: 0 6px 0 var(--c-dark), 0 12px 20px rgba(0, 0, 0, .22);
+  transition: transform .12s, box-shadow .12s;
+}
+.q-card:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--c-dark), 0 6px 12px rgba(0, 0, 0, .22); }
+.q-card:focus-visible { outline: 3px solid #1F2D6B; outline-offset: 3px; }
+.q-card__art { display: block; width: 100%; height: auto; }
+.q-card__title { padding: 2px 20px 0; font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; line-height: 1.2; }
+.q-card__sub { padding: 6px 20px 0; font-size: .85rem; font-weight: 700; opacity: .85; }
+.q-card--atom { --c-dark: #04051a; background: linear-gradient(180deg, #252c6b, #070a1f); }
+.q-card--reaction { --c-dark: #1a0710; background: linear-gradient(180deg, #6b2546, #200a17); }
 
 /* ===== Vue en réalité augmentée ===== */
 .screen--ar { padding: 0; background: #000; }
@@ -101,7 +128,9 @@ button, a.btn { font: inherit; touch-action: manipulation; }
   background: rgba(8, 12, 24, .7); text-align: center;
   transition: opacity .3s; pointer-events: none;
 }
-.ar-search img[hidden] { display: none; }
+.ar-search img[hidden], .ar-search a[hidden] { display: none; }
+.ar-search a { pointer-events: auto; color: #9fd0ff; font-size: .9rem; font-weight: 700; }
+.ar-search.is-hidden a { pointer-events: none; }
 .ar-search img { width: 64px; height: 64px; border-radius: 4px; animation: search 1.6s ease-in-out infinite; }
 .ar-search.is-hidden { opacity: 0; }
 @keyframes search { 50% { transform: scale(.85) rotate(-6deg); } }
@@ -142,7 +171,7 @@ button, a.btn { font: inherit; touch-action: manipulation; }
 .card__status--neg { color: #1650d8; }
 .card__noion { margin-top: 4px; font-size: .95rem; font-weight: 700; font-style: italic; color: #8a93a6; white-space: nowrap; }
 
-/* Message du mode libre (vue Molécule) */
+/* Message du mode libre (module Transformation chimique) */
 .ar-hint {
   position: absolute; left: 50%; bottom: max(24px, env(safe-area-inset-bottom));
   transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px);
@@ -163,7 +192,23 @@ button, a.btn { font: inherit; touch-action: manipulation; }
 }
 .mol-label__formula { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
 .mol-label__name { font-size: .8rem; font-weight: 700; color: #4a5770; }
+.mol-label[hidden] { display: none; }
+.mol-label--small { padding: 3px 9px 4px; border-radius: 9px; font-size: 1rem; font-weight: 800; background: rgba(255, 255, 255, .85); }
 @keyframes label-in { from { opacity: 0; scale: .6; } }
+
+/* Bandeau du module « Transformation chimique » */
+.rx-banner {
+  position: absolute; left: 50%; top: calc(max(12px, env(safe-area-inset-top)) + 64px);
+  transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px);
+  padding: 10px 18px; border-radius: 16px; text-align: center;
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; color: #fff;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .2), 0 8px 18px rgba(0, 0, 0, .3);
+  animation: label-in .35s cubic-bezier(.34, 1.56, .64, 1);
+}
+.rx-banner[hidden] { display: none; }
+.rx-banner--ok { background: linear-gradient(160deg, #7ED3A3, #3E9F6C); }
+.rx-banner--ko { background: linear-gradient(160deg, #F58A87, #D2443E); }
+.rx-banner--info { background: rgba(8, 12, 24, .72); font-family: var(--font); font-size: .95rem; font-weight: 700; }
 
 /* Commandes : ▲ + / nom (nombre) / ▼ − */
 .ar-controls {
@@ -176,21 +221,23 @@ button, a.btn { font: inherit; touch-action: manipulation; }
 .ctrl--p { --c: var(--proton); }
 .ctrl--n { --c: var(--neutron); }
 .ctrl--e { --c: var(--electron); }
+/* boutons pastel arrondis, comme les boutons « + Proton » de « Les Bases de la chimie » */
 .ctrl__label {
-  width: 100%; padding: 6px 4px; border-radius: 10px;
-  background: rgba(8, 12, 24, .78); border: 2px solid var(--c);
-  font-size: .9rem; font-weight: 800; text-align: center; white-space: nowrap;
+  width: 100%; padding: 8px 4px; border-radius: 999px;
+  background: var(--c); color: #fff;
+  font-size: .92rem; font-weight: 800; text-align: center; white-space: nowrap;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .2); text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
 }
 .ctrl__btn {
-  position: relative; width: 74px; height: 50px; padding: 0; border: none; cursor: pointer;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .45), transparent 55%), var(--c);
-  color: #fff; font-size: 1.5rem; font-weight: 900; line-height: 1;
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45));
+  position: relative; width: 74px; height: 48px; padding: 0; border: none; cursor: pointer;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .3), transparent 60%), var(--c);
+  color: #fff; font-size: 1.5rem; font-weight: 800; line-height: 1;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .2));
   transition: transform .08s;
 }
-.ctrl__btn--up { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-.ctrl__btn--down { clip-path: polygon(0 0, 100% 0, 50% 100%); background: linear-gradient(0deg, rgba(0, 0, 0, .25), transparent 55%), var(--c); }
-.ctrl__btn span { position: absolute; left: 0; right: 0; text-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+.ctrl__btn--up { clip-path: polygon(50% 0, 100% 100%, 0 100%); border-radius: 0; }
+.ctrl__btn--down { clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.ctrl__btn span { position: absolute; left: 0; right: 0; text-shadow: 0 1px 1px rgba(0, 0, 0, .25); }
 .ctrl__btn--up span { bottom: 6px; }
 .ctrl__btn--down span { top: 4px; }
 .ctrl__btn:active:not(:disabled) { transform: scale(.9); }

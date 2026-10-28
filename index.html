@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0d1424">
-  <title>Réalité augmentée</title>
+  <meta name="theme-color" content="#1c2226">
+  <title>La réalité augmentée</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
   <script src="lib/aruco/cv.js"></script>
@@ -12,70 +14,69 @@
   <script src="lib/aruco/posit1.js"></script>
   <script src="lib/aruco/aruco.js"></script>
   <script type="module" src="js/app.js"></script>
+  <script src="js/home.js" defer></script>
 </head>
 <body>
 
-  <!-- ===== Accueil ===== -->
-  <section class="screen screen--active" id="screen-home">
-    <div class="panel" data-step="welcome">
-      <h1>Réalité augmentée</h1>
-      <p>Pour utiliser l'appli, munis-toi du <strong>repère</strong> fourni avec l'application.</p>
-      <img class="panel__marker" src="repere/repere.png" alt="Le repère : un carré noir et blanc">
-      <div class="panel__actions">
-        <button class="btn btn--main" data-go="menu">C'est bon !</button>
-        <button class="btn" data-step-go="ask">Je ne l'ai pas</button>
-      </div>
-    </div>
+  <!-- ===== Accueil : choix du module ===== -->
+  <section class="screen screen--home screen--active" id="screen-home">
+    <div id="home-bg" aria-hidden="true"></div>
+    <div class="home-in">
+      <h1 class="app-title">La réalité augmentée</h1>
+      <p class="app-subtitle">Travailler et découvrir avec une vue 3D en temps réel</p>
 
-    <div class="panel" data-step="ask" hidden>
-      <h2>Pas de repère ?</h2>
-      <p>Veux-tu télécharger le repère ?</p>
-      <div class="panel__actions">
-        <button class="btn btn--main" data-step-go="download">Oui</button>
-        <button class="btn" data-step-go="no-download">Non</button>
-      </div>
-    </div>
-
-    <div class="panel" data-step="download" hidden>
-      <h2>Télécharger le repère</h2>
-      <div class="panel__actions">
-        <a class="btn btn--main" href="repere/repere-a-imprimer.pdf" download>Version à imprimer (PDF)</a>
-        <a class="btn" href="repere/repere.png" download>Image (PNG)</a>
-      </div>
-      <p class="panel__tip">Imprime-le à 100 %, sur papier mat, et pose-le bien à plat.</p>
-      <p class="panel__tip"><strong>Astuce :</strong> le repère marche aussi affiché sur un autre écran (le téléphone d'un camarade, un ordinateur…).</p>
-      <div class="panel__actions">
-        <button class="btn btn--ghost" data-step-go="welcome">Retour</button>
-      </div>
-    </div>
-
-    <div class="panel" data-step="no-download" hidden>
-      <h2>Pas de souci !</h2>
-      <p>Demande le repère à ton professeur.</p>
-      <p class="panel__tip"><strong>Astuce :</strong> le repère marche aussi affiché sur un autre écran (le téléphone d'un camarade, un ordinateur…).</p>
-      <div class="panel__actions">
-        <button class="btn btn--ghost" data-step-go="welcome">Retour à l'accueil</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== Choix de la vue ===== -->
-  <section class="screen" id="screen-menu">
-    <div class="menu">
-      <h2>Que veux-tu voir ?</h2>
-      <button class="view-btn view-btn--atom" data-view="atom">
-        <span class="view-btn__icon" aria-hidden="true">
-          <svg viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="2.5"><ellipse cx="32" cy="32" rx="28" ry="10"/><ellipse cx="32" cy="32" rx="28" ry="10" transform="rotate(60 32 32)"/><ellipse cx="32" cy="32" rx="28" ry="10" transform="rotate(-60 32 32)"/></g><circle cx="29" cy="30" r="5" fill="#ff2a2a"/><circle cx="35" cy="34" r="5" fill="#1fcf4a"/></svg>
-        </span>
-        <span class="view-btn__title">Atome</span>
+      <div class="module">
+      <!-- Module 1 : atome de lithium animé (repris de la carte « tailles » de Diverses Questions Scientifiques) -->
+      <button type="button" class="q-card q-card--atom" data-view="atom">
+        <svg class="q-card__art" viewBox="0 0 320 120" aria-hidden="true">
+          <defs>
+            <radialGradient id="g-p" cx=".35" cy=".3"><stop offset="0" stop-color="#ffb9b0"/><stop offset=".55" stop-color="#e2453b"/><stop offset="1" stop-color="#8a1f1a"/></radialGradient>
+            <radialGradient id="g-n" cx=".35" cy=".3"><stop offset="0" stop-color="#c9f5da"/><stop offset=".55" stop-color="#3fbf74"/><stop offset="1" stop-color="#1c6b42"/></radialGradient>
+            <radialGradient id="g-e" cx=".35" cy=".3"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#9fc2ff"/></radialGradient>
+            <radialGradient id="g-eh"><stop offset="0" stop-color="#bcd4ff" stop-opacity=".7"/><stop offset="1" stop-color="#bcd4ff" stop-opacity="0"/></radialGradient>
+            <radialGradient id="g-nh"><stop offset="0" stop-color="#ff9c84" stop-opacity=".35"/><stop offset="1" stop-color="#ff9c84" stop-opacity="0"/></radialGradient>
+          </defs>
+          <g id="atom-stars" fill="#fff"></g>
+          <g transform="translate(160 60) scale(1.35) translate(-84 -60)">
+            <circle cx="84" cy="60" r="22" fill="url(#g-nh)"/>
+            <g id="orb-back" fill="none" stroke="#a9c6ff" stroke-linecap="round"></g>
+            <g id="el-back"></g>
+            <g><circle cx="90.2" cy="61.7" r="5.4" fill="url(#g-n)"/><circle cx="85.7" cy="66.2" r="5.4" fill="url(#g-p)"/><circle cx="79.5" cy="64.5" r="5.4" fill="url(#g-n)"/><circle cx="77.8" cy="58.3" r="5.4" fill="url(#g-p)"/><circle cx="82.3" cy="53.8" r="5.4" fill="url(#g-n)"/><circle cx="88.5" cy="55.5" r="5.4" fill="url(#g-p)"/><circle cx="84.2" cy="60.4" r="5.4" fill="url(#g-n)"/></g>
+            <g id="orb-front" fill="none" stroke="#a9c6ff" stroke-linecap="round"></g>
+            <g id="el-front"></g>
+          </g>
+        </svg>
+        <span class="q-card__title">Les atomes et les ions</span>
+        <span class="q-card__sub">Construis un atome ou un ion, proton par proton</span>
       </button>
-      <button class="view-btn view-btn--molecule" data-view="molecule">
-        <span class="view-btn__icon" aria-hidden="true">
-          <svg viewBox="0 0 64 64"><circle cx="16" cy="22" r="10" fill="#f2f2f2"/><circle cx="48" cy="22" r="10" fill="#f2f2f2"/><circle cx="32" cy="36" r="16" fill="#ff2a2a"/></svg>
-        </span>
-        <span class="view-btn__title">Molécule</span>
+        <a class="dl-btn" href="repere/repere-a-imprimer.pdf" download title="Télécharger le repère" aria-label="Télécharger le repère"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="26" height="26" rx="3" fill="#000"/><g fill="#fff"><rect x="8" y="8" width="5" height="5"/><rect x="16" y="8" width="8" height="5"/><rect x="8" y="16" width="5" height="8"/><rect x="16" y="19" width="5" height="5"/><rect x="19" y="14" width="5" height="3"/></g></svg></a>
+      </div>
+
+
+      <div class="module">
+      <!-- Module 2 : CO₂ qui se défait en C + O₂, puis se refait (3 s dans chaque sens) -->
+      <button type="button" class="q-card q-card--reaction" data-view="reaction">
+        <svg class="q-card__art" viewBox="0 0 320 120" aria-hidden="true">
+          <defs>
+            <radialGradient id="g-c" cx=".35" cy=".3"><stop offset="0" stop-color="#8a8f99"/><stop offset=".55" stop-color="#2c2f36"/><stop offset="1" stop-color="#0c0d10"/></radialGradient>
+            <radialGradient id="g-o" cx=".35" cy=".3"><stop offset="0" stop-color="#ffb3ab"/><stop offset=".55" stop-color="#ec3a30"/><stop offset="1" stop-color="#8c1a14"/></radialGradient>
+            <radialGradient id="g-glow"><stop offset="0" stop-color="#ffe2a8" stop-opacity=".45"/><stop offset="1" stop-color="#ffe2a8" stop-opacity="0"/></radialGradient>
+          </defs>
+          <circle id="rx-glow" cx="160" cy="58" r="70" fill="url(#g-glow)" opacity="0"/>
+          <text id="rx-plus" x="152" y="66" fill="#fff" font-size="28" font-weight="700" text-anchor="middle" opacity="0">+</text>
+          <g id="rx-atoms">
+            <g id="rx-c"><circle r="17" fill="url(#g-c)"/><text y="6" fill="#fff" font-size="16" font-weight="800" text-anchor="middle">C</text></g>
+            <g id="rx-o1"><circle r="18" fill="url(#g-o)"/><text y="6" fill="#fff" font-size="16" font-weight="800" text-anchor="middle">O</text></g>
+            <g id="rx-o2"><circle r="18" fill="url(#g-o)"/><text y="6" fill="#fff" font-size="16" font-weight="800" text-anchor="middle">O</text></g>
+          </g>
+          <text id="rx-left" x="160" y="108" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">CO₂</text>
+          <text id="rx-right" x="160" y="108" fill="#fff" font-size="15" font-weight="700" text-anchor="middle" opacity="0">C + O₂</text>
+        </svg>
+        <span class="q-card__title">Transformation chimique</span>
+        <span class="q-card__sub">Pose les bons réactifs : les atomes se réarrangent sous tes yeux</span>
       </button>
-      <button class="btn btn--ghost menu__back" data-go="home">← Accueil</button>
+        <a class="dl-btn" href="repere/reperes-reactifs.pdf" download title="Télécharger les repères des réactifs" aria-label="Télécharger les repères des réactifs"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="26" height="26" rx="3" fill="#000"/><g fill="#fff"><rect x="8" y="8" width="5" height="5"/><rect x="16" y="8" width="8" height="5"/><rect x="8" y="16" width="5" height="8"/><rect x="16" y="19" width="5" height="5"/><rect x="19" y="14" width="5" height="3"/></g></svg></a>
+      </div>
     </div>
   </section>
 
@@ -86,7 +87,7 @@
       <p id="camera-error-text"></p>
       <div class="panel__actions">
         <button class="btn btn--main" id="camera-retry">Réessayer</button>
-        <button class="btn btn--ghost" data-go="menu">Retour au menu</button>
+        <button class="btn btn--ghost" data-go="home">Retour à l'accueil</button>
       </div>
     </div>
   </section>
@@ -101,9 +102,10 @@
     <div class="ar-search" id="ar-search">
       <img id="ar-search-img" src="repere/repere.png" alt="">
       <span id="ar-search-text">Montre le repère à la caméra</span>
+      <a id="ar-search-link" href="repere/repere-a-imprimer.pdf" download hidden>Pas de repère ? Télécharge-le ici</a>
     </div>
     <div class="ar-top">
-      <button class="chip" data-go="menu">← Menu</button>
+      <button class="chip" data-go="home">← Accueil</button>
       <button class="chip" id="camera-switch" hidden>Changer de caméra</button>
     </div>
     <div class="ar-controls" id="ar-controls"></div>

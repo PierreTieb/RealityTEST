@@ -9,7 +9,7 @@
 //   arrière (« les atomes ne peuvent ni disparaître ni apparaître ») et la tentative recommence.
 // Plus aucun repère vu : mode libre (scène figée, gyroscope + doigt), l'animation continue.
 import * as THREE from 'three';
-import { ATOMS, SPECIES, CARD_SPECIES, findReaction, layout } from './chemistry.js';
+import { ATOMS, SPECIES, REACTIONS, CARD_SPECIES, findReaction, layout } from './chemistry.js';
 import { popScale, satin, SHRINK_TIME } from './util.js';
 import { FreeLook, requestMotion } from './free-look.js';
 
@@ -105,6 +105,7 @@ export class ReactionView {
     this.hint.textContent = 'Mode libre : tourne le téléphone ou fais glisser ton doigt. Montre un repère pour reprendre.';
     this.hint.hidden = true;
     ui.layer.append(this.labels, this.banner, this.hint);
+    this.buildCatalog();
     this.free = new FreeLook(stage.els.root);
     stage.onFrame = dt => this.frame(dt);
   }
@@ -120,8 +121,39 @@ export class ReactionView {
     [this.tex, this.mat, this.ghostMat].forEach(o => Object.values(o).forEach(x => x.dispose()));
     this.shellMat.dispose();
     this.labels.remove();
+    this.catalogBtn.remove();
+    this.catalog.remove();
     this.banner.remove();
     this.hint.remove();
+  }
+
+  // ---------- Catalogue ----------
+
+  // Bouton « Réactions possibles » : liste des réactifs que l'on peut faire réagir ensemble,
+  // sans coefficients ni produits (c'est à l'élève de trouver).
+  buildCatalog() {
+    const root = this.stage.els.root;
+    this.catalogBtn = document.createElement('button');
+    this.catalogBtn.className = 'chip rx-catalog-btn';
+    this.catalogBtn.textContent = 'Réactions possibles';
+    this.catalog = document.createElement('div');
+    this.catalog.className = 'rx-catalog';
+    this.catalog.hidden = true;
+    const rows = REACTIONS.map(rx => '<li>' + rx.reactants.map(r => {
+      const sp = SPECIES[r.key];
+      return `<span class="rx-catalog__sp"><b>${sp.formula}</b><small>${sp.name}</small></span>`;
+    }).join('<span class="rx-catalog__plus">+</span>') + '</li>').join('');
+    this.catalog.innerHTML = `<div class="rx-catalog__box">
+        <h2>Ce que tu peux faire réagir</h2>
+        <p>Pose les repères de ces réactifs, en bon nombre : à toi de trouver combien il en faut et ce qui se forme !</p>
+        <ul>${rows}</ul>
+        <button class="btn btn--main rx-catalog__close">Fermer</button>
+      </div>`;
+    this.catalogBtn.addEventListener('click', () => { this.catalog.hidden = false; });
+    this.catalog.addEventListener('click', e => {
+      if (e.target === this.catalog || e.target.closest('.rx-catalog__close')) this.catalog.hidden = true;
+    });
+    root.append(this.catalogBtn, this.catalog);
   }
 
   // ---------- Réactifs posés sur les repères ----------

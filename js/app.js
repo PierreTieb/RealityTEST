@@ -118,6 +118,26 @@ $('camera-switch').addEventListener('click', switchCamera);
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
 
+// Après une rotation, le navigateur peut garder la page décalée : les boutons s'affichent au bon endroit
+// mais le toucher tombe à côté. On remet la page en place et on force le recalcul de l'écran affiché.
+let rotateTimer = 0;
+function resetViewport() {
+  clearTimeout(rotateTimer);
+  rotateTimer = setTimeout(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = document.body.scrollTop = 0;
+    const active = document.querySelector('.screen--active');
+    if (active) {
+      active.style.display = 'none';
+      void active.offsetHeight;
+      active.style.display = '';
+    }
+  }, 300);
+}
+window.addEventListener('orientationchange', resetViewport);
+window.addEventListener('resize', resetViewport);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resetViewport);
+
 // Appli en arrière-plan : on coupe la caméra ; au retour, on la relance.
 document.addEventListener('visibilitychange', () => {
   if (!view) return;

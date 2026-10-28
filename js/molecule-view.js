@@ -1,8 +1,9 @@
 // molecule-view.js
-// Vue « Molécule » : chaque repère d'atome (ids 1 à 36) porte une sphère colorée, avec son symbole
-// posé à plat devant et derrière. Quand des repères proches réunissent de quoi faire une molécule
-// du catalogue, les atomes se rejoignent et la formule + le nom flottent au-dessus.
-// Atomes en trop : ils restent sur leur repère. Plusieurs molécules possibles : la plus grosse d'abord.
+// Vue « Molécule » : chaque repère d'atome (ids 1 à 36) porte une sphère colorée, son symbole
+// imprimé dessus devant et derrière (sur l'équateur, parallèle au repère).
+// Tant qu'aucune molécule n'est possible, on voit les atomes. Dès que des repères proches réunissent
+// une molécule du catalogue, on ne voit plus que les molécules (la plus grosse d'abord, toutes celles
+// qui sont complètes), avec leur formule et leur nom au-dessus ; les atomes en trop sont cachés.
 import * as THREE from 'three';
 import { ATOMS, CARD_ELEMENT, CATALOGUE, layout } from './molecules.js';
 import { popScale, satin, SHRINK_TIME } from './util.js';
@@ -11,23 +12,29 @@ const LINK = 2.8;          // repères à moins de 2,8 côtés l'un de l'autre :
 const UNLINK = 3.4;        // une molécule formée ne se casse qu'au-delà (évite le clignotement)
 const MOVE_SPEED = 7;      // vitesse à laquelle les atomes rejoignent leur place
 const LIFT = 0.05;         // jeu entre les sphères et le repère
-const LABEL_GAP = 0.32;    // distance entre la sphère et son symbole posé à plat
-const LABEL_W = 1.05, LABEL_H = 0.66;
+const DARK_TEXT = { H: 1, Na: 1, Mg: 1, Cl: 1 };   // atomes clairs : symbole noir, sinon blanc
 
-function symbolTexture(symbol) {
+// Peau de la sphère : sa couleur, avec le symbole devant et derrière.
+// Sphère de three.js : u = 0,25 et u = 0,75 sont les deux faces, une fois les pôles tournés vers le haut du repère.
+function skinTexture(symbol) {
   const cv = document.createElement('canvas');
-  cv.width = 256;
-  cv.height = 160;
+  cv.width = 1024;
+  cv.height = 512;
   const ctx = cv.getContext('2d');
-  ctx.font = '800 120px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle = '#' + ATOMS[symbol].color.toString(16).padStart(6, '0');
+  ctx.fillRect(0, 0, 1024, 512);
+  ctx.font = `800 ${symbol.length > 1 ? 150 : 170}px "Segoe UI", system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 18;
-  ctx.strokeStyle = symbol === 'C' ? '#ffffff' : '#111111';
-  ctx.strokeText(symbol, 128, 84);
-  ctx.fillStyle = '#' + ATOMS[symbol].color.toString(16).padStart(6, '0');
-  ctx.fillText(symbol, 128, 84);
+  const dark = DARK_TEXT[symbol];
+  ctx.fillStyle = dark ? '#111111' : '#ffffff';
+  for (const x of [256, 768]) {
+    ctx.save();
+    ctx.translate(x, 262);
+    ctx.scale(0.75, 1);       // la sphère étire le texte en largeur près de l'équateur
+    ctx.fillText(symbol, 0, 0);
+    ctx.restore();
+  }
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
@@ -48,12 +55,14 @@ export class MoleculeView {
 
     this.root = new THREE.Group();
     stage.scene.add(this.root);
-    this.geo = { sphere: new THREE.SphereGeometry(1, 32, 24), label: new THREE.PlaneGeometry(LABEL_W, LABEL_H) };
+    this.geo = { sphere: new THREE.SphereGeometry(1, 48, 32) };
+    this.geo.sphere.rotateX(Math.PI / 2);   // pôles vers le haut du repère : le symbole est sur l'équateur
     this.mat = {};
     this.tex = {};
     for (const el of Object.keys(ATOMS)) {
-      this.mat[el] = satin(ATOMS[el].color);
-      this.tex[el] = symbolTexture(el);
+      this.tex[el] = skinTexture(el);
+      this.mat[el] = satin(0xffffff);
+      this.mat[el].map = this.tex[el];
     }
 
     this.labels = document.createElement('div');
@@ -65,7 +74,6 @@ export class MoleculeView {
     this.stage.onFrame = null;
     this.stage.setMulti(false);
     this.stage.scene.remove(this.root);
-    for (const a of this.atoms.values()) a.labelMat.dispose();
     Object.values(this.geo).forEach(g => g.dispose());
     Object.values(this.mat).forEach(m => m.dispose());
     Object.values(this.tex).forEach(t => t.dispose());
@@ -80,18 +88,10 @@ export class MoleculeView {
     const sphere = new THREE.Mesh(this.geo.sphere, this.mat[el]);
     sphere.scale.setScalar(r);
     obj.add(sphere);
-    // Symbole couché sur le plan du repère, devant (lisible de face) et derrière (lisible de l'autre côté).
-    // Il est au niveau de la table : une grosse sphère ne le cache pas.
-    const labelMat = new THREE.MeshBasicMaterial({ map: this.tex[el], transparent: true, depthWrite: false });
-    const front = new THREE.Mesh(this.geo.label, labelMat);
-    front.position.set(0, -(r + LABEL_GAP), -r);
-    const back = new THREE.Mesh(this.geo.label, labelMat);
-    back.position.set(0, r + LABEL_GAP, -r);
-    back.rotation.z = Math.PI;
-    obj.add(front, back);
     obj.scale.setScalar(0.001);
     this.root.add(obj);
-    const a = { id, el, r, obj, labelMat, born: this.time, dying: false, mol: null, placed: false };
+    // show : 1 affiché, 0 caché (atome en trop quand une molécule existe).
+    const a = { id, el, r, obj, born: this.time, dying: false, mol: null, placed: false, show: 1 };
     this.atoms.set(id, a);
     return a;
   }
@@ -186,7 +186,7 @@ export class MoleculeView {
       const el = CARD_ELEMENT[id];
       if (!el) continue;
       let a = this.atoms.get(id);
-      if (a && a.dying) { this.root.remove(a.obj); a.labelMat.dispose(); a = null; }
+      if (a && a.dying) { this.root.remove(a.obj); a = null; }
       if (!a) a = this.createAtom(id, el);
       a.mPos = m.position;
       a.mQuat = m.quaternion;
@@ -218,8 +218,8 @@ export class MoleculeView {
     for (const a of this.atoms.values()) {
       if (a.dying) {
         const x = (t - a.deathStart) / SHRINK_TIME;
-        if (x >= 1) { this.root.remove(a.obj); a.labelMat.dispose(); this.atoms.delete(a.id); continue; }
-        a.obj.scale.setScalar(Math.max(0.001, 1 - x * x));
+        if (x >= 1) { this.root.remove(a.obj); this.atoms.delete(a.id); continue; }
+        a.obj.scale.setScalar(Math.max(0.001, (1 - x * x) * a.show));
         continue;
       }
       if (!a.mol) {
@@ -234,9 +234,10 @@ export class MoleculeView {
         a.obj.position.lerp(a.target, k);
         a.obj.quaternion.slerp(a.targetQuat, k);
       }
-      a.obj.scale.setScalar(Math.max(0.001, popScale(t - a.born)));
-      // Dans une molécule, les symboles s'effacent : la formule flotte au-dessus.
-      a.labelMat.opacity += ((a.mol ? 0 : 1) - a.labelMat.opacity) * k;
+      // Dès qu'une molécule existe à l'écran, les atomes qui n'en font pas partie se dégonflent.
+      a.show += ((a.mol || !mols.length ? 1 : 0) - a.show) * k * 1.5;
+      a.obj.scale.setScalar(Math.max(0.001, popScale(t - a.born) * a.show));
+      a.obj.visible = a.show > 0.01;
     }
 
     // Formule et nom au-dessus de chaque molécule.

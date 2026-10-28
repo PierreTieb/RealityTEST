@@ -11,6 +11,7 @@
 
 * { box-sizing: border-box; }
 
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }   /* pas de texte agrandi en paysage */
 html, body {
   margin: 0; height: 100%; overflow: hidden;
   background: var(--bg); color: var(--ink);
@@ -108,10 +109,11 @@ button, a.btn { font: inherit; touch-action: manipulation; }
 .ar-top {
   position: absolute; left: 0; right: 0; top: 0;
   display: flex; justify-content: space-between; gap: 8px;
-  padding: max(12px, env(safe-area-inset-top)) 12px 0;
+  /* un peu plus bas que le bord : la barre repliée du navigateur capte les touchers tout en haut */
+  padding: calc(max(12px, env(safe-area-inset-top)) + 10px) 12px 0;
 }
 .chip {
-  padding: 9px 14px; border-radius: 999px; border: none;
+  padding: 11px 16px; border-radius: 999px; border: none;
   background: rgba(8, 12, 24, .7); color: var(--ink);
   font-size: .95rem; font-weight: 700; cursor: pointer;
 }

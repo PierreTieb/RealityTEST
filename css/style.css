@@ -142,6 +142,16 @@ button, a.btn { font: inherit; touch-action: manipulation; }
 .card__status--neg { color: #1650d8; }
 .card__noion { margin-top: 4px; font-size: .95rem; font-weight: 700; font-style: italic; color: #8a93a6; white-space: nowrap; }
 
+/* Message du mode libre (vue Molécule) */
+.ar-hint {
+  position: absolute; left: 50%; bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px);
+  padding: 9px 14px; border-radius: 14px; text-align: center;
+  background: rgba(8, 12, 24, .72); color: var(--ink); font-size: .85rem;
+}
+.ar-hint[hidden] { display: none; }
+.screen--ar { touch-action: none; }   /* glisser le doigt fait tourner la molécule, pas la page */
+
 /* Formule et nom flottant au-dessus d'une molécule */
 .mol-label {
   position: absolute; left: 0; top: 0;

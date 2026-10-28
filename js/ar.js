@@ -113,6 +113,7 @@ export class ArStage {
     this.tracker = new MarkerTracker();
     this.multi = false;
     this.markers = new Map();
+    this.hold = false;          // une vue peut garder sa scène affichée sans repère (mode libre)
 
     const renderer = this.renderer = new THREE.WebGLRenderer({ canvas: els.canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -245,7 +246,7 @@ export class ArStage {
       }
     }
     for (const [id, m] of this.markers) if (now - m.lastSeen > HOLD_TIME) this.markers.delete(id);
-    this._setFound(this.markers.size > 0);
+    this._setFound(this.markers.size > 0 || this.hold);
   }
 
   // Une vue à plusieurs repères (molécules) analyse une image plus fine : repères plus petits.

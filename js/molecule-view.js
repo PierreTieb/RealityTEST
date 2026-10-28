@@ -4,12 +4,14 @@
 // Tant qu'aucune molécule n'est possible, on voit les atomes. Dès que des repères proches réunissent
 // une molécule du catalogue, on ne voit plus que les molécules (la plus grosse d'abord, toutes celles
 // qui sont complètes), avec leur formule et leur nom au-dessus ; les atomes en trop sont cachés.
+// Tous les atomes à l'écran comptent, quelle que soit la distance entre leurs repères.
+// Plus aucun repère vu : mode libre (scène figée, gyroscope + doigt) jusqu'au retour d'un repère.
 import * as THREE from 'three';
 import { ATOMS, CARD_ELEMENT, CATALOGUE, layout } from './molecules.js';
 import { popScale, satin, SHRINK_TIME } from './util.js';
+import { FreeLook, requestMotion } from './free-look.js';
 
-const LINK = 2.8;          // repères à moins de 2,8 côtés l'un de l'autre : ils peuvent s'assembler
-const UNLINK = 3.4;        // une molécule formée ne se casse qu'au-delà (évite le clignotement)
+const SEEN = 400;          // ms : un repère vu depuis moins longtemps compte comme « à l'écran »
 const MOVE_SPEED = 7;      // vitesse à laquelle les atomes rejoignent leur place
 const LIFT = 0.05;         // jeu entre les sphères et le repère
 const DARK_TEXT = { H: 1, Na: 1, Mg: 1, Cl: 1 };   // atomes clairs : symbole noir, sinon blanc
@@ -44,6 +46,7 @@ function skinTexture(symbol) {
 export class MoleculeView {
   static searchText = 'Montre les repères des atomes à la caméra';
   static searchImage = false;
+  static beforeOpen = requestMotion;   // pendant le toucher sur « Molécule » (autorisation du gyroscope sur iPhone)
 
   constructor(stage, ui) {
     this.stage = stage;
@@ -67,12 +70,22 @@ export class MoleculeView {
 
     this.labels = document.createElement('div');
     ui.layer.appendChild(this.labels);
+    this.hint = document.createElement('div');
+    this.hint.className = 'ar-hint';
+    this.hint.textContent = 'Mode libre : tourne le téléphone ou fais glisser ton doigt. Montre un repère pour reprendre.';
+    this.hint.hidden = true;
+    ui.layer.appendChild(this.hint);
+    this.free = new FreeLook(stage.els.root);
+    this.frozen = false;
     stage.onFrame = dt => this.frame(dt);
   }
 
   dispose() {
     this.stage.onFrame = null;
+    this.stage.hold = false;
     this.stage.setMulti(false);
+    this.free.dispose();
+    this.hint.remove();
     this.stage.scene.remove(this.root);
     Object.values(this.geo).forEach(g => g.dispose());
     Object.values(this.mat).forEach(m => m.dispose());
@@ -155,24 +168,54 @@ export class MoleculeView {
       new THREE.Vector3(p.x, p.y, p.z + mol.lift).applyQuaternion(mol.quaternion).add(mol.position));
   }
 
-  // Groupes de repères proches (un repère déjà dans une molécule reste attaché un peu plus loin).
-  groups(live) {
-    const parent = new Map(live.map(a => [a, a]));
-    const find = a => parent.get(a) === a ? a : find(parent.get(a));
-    for (let i = 0; i < live.length; i++) {
-      for (let j = i + 1; j < live.length; j++) {
-        const a = live[i], b = live[j];
-        const max = a.mol && a.mol === b.mol ? UNLINK : LINK;
-        if (a.mPos.distanceTo(b.mPos) < max) parent.set(find(a), find(b));
-      }
+  // ---------- Mode libre ----------
+
+  // Plus aucun repère vu : on fige la scène telle quelle, le gyroscope et le doigt prennent le relais.
+  freeze() {
+    const shown = [...this.atoms.values()].filter(a => !a.dying && a.show > 0.5);
+    const center = new THREE.Vector3();
+    shown.forEach(a => center.add(a.obj.position));
+    if (shown.length) center.divideScalar(shown.length);
+    const anyMol = [...this.atoms.values()].some(a => a.mol);
+    for (const a of this.atoms.values()) {
+      a.fPos = a.obj.position.clone();
+      a.fQuat = a.obj.quaternion.clone();
+      a.fShow = !a.dying && (a.mol || !anyMol) ? 1 : 0;   // un atome en train de se dégonfler finit de disparaître
     }
-    const out = new Map();
-    for (const a of live) {
-      const root = find(a);
-      if (!out.has(root)) out.set(root, []);
-      out.get(root).push(a);
+    for (const list of this.cache.values()) list.forEach(m => { m.fCenter = m.center.clone(); });
+    this.free.start(center);
+    this.frozen = true;
+    this.stage.hold = true;
+    this.hint.hidden = false;
+  }
+
+  unfreeze() {
+    this.frozen = false;
+    this.free.stop();
+    this.stage.hold = false;
+    this.hint.hidden = true;
+    // Les repères non revus ont une position d'avant la rotation du téléphone : on les oublie.
+    const now = performance.now();
+    for (const [id, m] of this.stage.markers) if (now - m.lastSeen > SEEN) this.stage.markers.delete(id);
+  }
+
+  frameFrozen(k) {
+    this.free.update();
+    for (const a of this.atoms.values()) {
+      this.free.position(a.fPos, a.obj.position);
+      this.free.quaternion(a.fQuat, a.obj.quaternion);
+      a.show += (a.fShow - a.show) * k * 1.5;
+      a.obj.scale.setScalar(Math.max(0.001, a.show));
+      a.obj.visible = a.show > 0.01;
     }
-    return [...out.values()];
+    for (const list of this.cache.values()) {
+      for (const m of list) this.placeLabel(m, this.free.position(m.fCenter));
+    }
+  }
+
+  placeLabel(m, center) {
+    const s = this.stage.toScreen(center.clone().add(new THREE.Vector3(0, m.radius + 0.15, 0)));
+    m.label.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -100%)`;
   }
 
   // ---------- Animation ----------
@@ -180,6 +223,13 @@ export class MoleculeView {
   frame(dt) {
     this.time += dt;
     const t = this.time, k = 1 - Math.exp(-dt * MOVE_SPEED), markers = this.stage.markers;
+
+    // Mode libre : on y entre quand plus aucun repère d'atome n'est vu, on en sort dès qu'un repère revient.
+    const now = performance.now();
+    const seen = [...markers.values()].some(m => CARD_ELEMENT[m.id] && now - m.lastSeen < SEEN);
+    if (!seen && !this.frozen && this.atoms.size) this.freeze();
+    if (seen && this.frozen) this.unfreeze();
+    if (this.frozen) return this.frameFrozen(k);
 
     // Repères qui apparaissent / disparaissent.
     for (const [id, m] of markers) {
@@ -196,11 +246,11 @@ export class MoleculeView {
     }
     const live = [...this.atoms.values()].filter(a => !a.dying);
 
-    // Molécules : on garde celles d'un groupe inchangé, on recalcule les autres.
+    // Molécules : tous les atomes à l'écran comptent ensemble. Même composition : on garde les mêmes.
     const cache = new Map(), mols = [];
-    for (const g of this.groups(live)) {
-      const key = g.map(a => a.id).sort((x, y) => x - y).join(',');
-      const found = this.cache.get(key) || this.buildMolecules(g);
+    if (live.length) {
+      const key = live.map(a => a.id).sort((x, y) => x - y).join(',');
+      const found = this.cache.get(key) || this.buildMolecules(live);
       cache.set(key, found);
       mols.push(...found);
     }
@@ -241,10 +291,6 @@ export class MoleculeView {
     }
 
     // Formule et nom au-dessus de chaque molécule.
-    for (const m of mols) {
-      const top = m.center.clone().add(new THREE.Vector3(0, m.radius + 0.15, 0));
-      const s = this.stage.toScreen(top);
-      m.label.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -100%)`;
-    }
+    for (const m of mols) this.placeLabel(m, m.center);
   }
 }

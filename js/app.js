@@ -38,6 +38,7 @@ function cameraErrorText(err) {
 
 async function openView(name) {
   pendingView = name;
+  if (VIEWS[name].beforeOpen) VIEWS[name].beforeOpen();   // encore pendant le toucher : avant tout await
   if (!cameraAvailable()) return showCameraError(null);
   const video = $('ar-video');
   try {

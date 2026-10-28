@@ -1,7 +1,7 @@
 # Génère repere/reperes-reactifs.pdf : les repères du module « Transformation chimique », 20 par page A4.
 # La liste des repères (réactif, nombre d'exemplaires, dans l'ordre des ids à partir de 1) est CARDS
 # dans js/chemistry.js (dictionnaire ARUCO_MIP_36h12 ; l'id 0 est le repère universel du module Atome).
-# Les repères désactivés (null) gardent leur id mais ne sont pas imprimés.
+# Les repères désactivés (null, ou réactif d'aucune réaction) gardent leur id mais ne sont pas imprimés.
 # Lancer depuis le dossier de l'appli : python outils/repere_reactifs.py
 import re
 from pathlib import Path
@@ -15,6 +15,11 @@ NAMES = dict(re.findall(r"^\s*'([^']+)':\s*\[\"([^\"]+)\"", chem, re.M))
 # Repères : lignes  ['H2', 3],  ou  [null, 2],
 block = re.search(r'export const CARDS = \[(.*?)\n\];', chem, re.S).group(1)
 cards = [(k or None, int(n)) for k, n in re.findall(r"\[(?:'([^']+)'|null), (\d+)\]", block)]
+# Réactifs utilisés par au moins une réaction : seuls leurs repères sont imprimés.
+rx_block = re.search(r'const RAW_REACTIONS = \[(.*?)\];', chem, re.S).group(1)
+used = {re.match(r'^(?:\d+\s*)?(\S+)$', t.strip()).group(1)
+        for text in re.findall(r"'([^']+->[^']+)'", rx_block) for t in text.split(' -> ')[0].split(' + ')}
+cards = [(k if k in used else None, n) for k, n in cards]
 
 src = (ROOT / 'lib/aruco/aruco.js').read_text(encoding='utf-8')
 codes_block = re.search(r'ARUCO_MIP_36h12:\s*{.*?codeList:\s*\[(.*?)\]', src, re.S).group(1)

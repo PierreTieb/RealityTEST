@@ -79,40 +79,19 @@ Object.entries(RAW_SPECIES).forEach(([key, [name, formula, atoms, bonds]], index
   SPECIES[key] = { key, name, formula, els, bondList, counts, index };
 });
 
-// Réactions équilibrées (plus petits coefficients). Catalogue de « Les Bases de la chimie »,
-// sans celles qui demandent plus de 4 fois le même réactif (propane, butane, éthane, phosphore,
-// aluminium + acide, ammoniac + dioxygène, photosynthèse, respiration) ni celles à un seul réactif
-// (décompositions : pas utilisées au collège).
+// Réactions équilibrées (plus petits coefficients), choisies dans le catalogue de « Les Bases de la chimie »
+// pour réutiliser au maximum les mêmes repères : 10 réactions, 11 réactifs (le dioxygène sert 6 fois).
 const RAW_REACTIONS = [
   '2 H2 + O2 -> 2 H2O',
   'C + O2 -> CO2',
   'CH4 + 2 O2 -> CO2 + 2 H2O',
-  '2 Mg + O2 -> 2 MgO',
-  '2 Na + Cl2 -> 2 NaCl',
-  'CaCO3 + 2 HCl -> CaCl2 + H2O + CO2',
-  'N2 + 3 H2 -> 2 NH3',
-  'S + O2 -> SO2',
-  '4 Al + 3 O2 -> 2 Al2O3',
-  'C2H6O + 3 O2 -> 2 CO2 + 3 H2O',
-  'Ca(OH)2 + 2 HCl -> CaCl2 + 2 H2O',
-  '2 NaOH + H2SO4 -> Na2SO4 + 2 H2O',
   '2 CO + O2 -> 2 CO2',
-  'H2 + Cl2 -> 2 HCl',
-  '4 Li + O2 -> 2 Li2O',
-  '2 Na + 2 H2O -> 2 NaOH + H2',
+  'S + O2 -> SO2',
+  '2 Mg + O2 -> 2 MgO',
   'Mg + 2 HCl -> MgCl2 + H2',
-  'N2 + O2 -> 2 NO',
-  '2 SO2 + O2 -> 2 SO3',
-  '2 Ca + O2 -> 2 CaO',
   'HCl + NaOH -> NaCl + H2O',
-  'CaO + H2O -> Ca(OH)2',
-  'Mg(OH)2 + 2 HCl -> MgCl2 + 2 H2O',
-  'CO2 + H2O -> H2CO3',
-  'SO3 + H2O -> H2SO4',
-  'Na2CO3 + 2 HCl -> 2 NaCl + H2O + CO2',
-  'NaHCO3 + HCl -> NaCl + H2O + CO2',
-  'NH3 + HCl -> NH4Cl',
-  'Si + O2 -> SiO2'
+  '2 Na + Cl2 -> 2 NaCl',
+  'H2 + Cl2 -> 2 HCl'
 ];
 
 const side = s => s.split(' + ').map(t => {
@@ -138,6 +117,7 @@ export const REACTIONS = RAW_REACTIONS.map(text => {
 // (l'id 0 est le repère universel de la vue Atome). Liste figée : des repères sont déjà imprimés,
 // ne jamais changer l'ordre ni retirer une ligne ; ajouter les nouveaux réactifs à la fin.
 // null : repère d'une espèce retirée (réactions à un seul réactif) ; ignoré, son id reste réservé.
+// Les repères d'un réactif qui n'apparaît dans aucune réaction de REACTIONS sont eux aussi inactifs.
 export const CARDS = [
   ['H2', 3], ['O2', 3], ['C', 1], ['CH4', 1], ['Mg', 2], ['Na', 2], ['Cl2', 1], ['CaCO3', 1],
   ['HCl', 2], ['N2', 1], ['S', 1], ['Al', 4], ['C2H6O', 1],
@@ -151,7 +131,8 @@ export const CARDS = [
 export const CARD_SPECIES = {};
 {
   let id = 1;
-  for (const [key, n] of CARDS) for (let i = 0; i < n; i++, id++) if (key) CARD_SPECIES[id] = key;
+  const used = new Set(REACTIONS.flatMap(rx => rx.reactants.map(r => r.key)));
+  for (const [key, n] of CARDS) for (let i = 0; i < n; i++, id++) if (used.has(key)) CARD_SPECIES[id] = key;
 }
 // Vérification : chaque réaction a assez de repères pour chacun de ses réactifs.
 for (const rx of REACTIONS) {

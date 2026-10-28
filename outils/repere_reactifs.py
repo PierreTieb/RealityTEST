@@ -1,7 +1,7 @@
 # Génère repere/reperes-reactifs.pdf : les repères du module « Transformation chimique », 20 par page A4.
-# Les réactifs, leur nombre d'exemplaires et les ids viennent de js/chemistry.js (même calcul que CARDS) :
-# un repère par réactif, autant d'exemplaires que son plus grand coefficient, ids à partir de 1
-# (dictionnaire ARUCO_MIP_36h12 ; l'id 0 est le repère universel du module Atome).
+# La liste des repères (réactif, nombre d'exemplaires, dans l'ordre des ids à partir de 1) est CARDS
+# dans js/chemistry.js (dictionnaire ARUCO_MIP_36h12 ; l'id 0 est le repère universel du module Atome).
+# Les repères désactivés (null) gardent leur id mais ne sont pas imprimés.
 # Lancer depuis le dossier de l'appli : python outils/repere_reactifs.py
 import re
 from pathlib import Path
@@ -12,21 +12,9 @@ chem = (ROOT / 'js/chemistry.js').read_text(encoding='utf-8')
 
 # Noms des espèces : lignes  'H2': ["Dihydrogène", "H₂", ...
 NAMES = dict(re.findall(r"^\s*'([^']+)':\s*\[\"([^\"]+)\"", chem, re.M))
-# Réactions : lignes  '2 H2 + O2 -> 2 H2O',
-block = re.search(r'const RAW_REACTIONS = \[(.*?)\];', chem, re.S).group(1)
-reactions = re.findall(r"'([^']+->[^']+)'", block)
-
-cards = []                        # [(clé, nombre)] dans l'ordre d'apparition
-for text in reactions:
-    for term in text.split(' -> ')[0].split(' + '):
-        m = re.match(r'^(\d+)?\s*(\S+)$', term.strip())
-        n, key = int(m.group(1) or 1), m.group(2)
-        for c in cards:
-            if c[0] == key:
-                c[1] = max(c[1], n)
-                break
-        else:
-            cards.append([key, n])
+# Repères : lignes  ['H2', 3],  ou  [null, 2],
+block = re.search(r'export const CARDS = \[(.*?)\n\];', chem, re.S).group(1)
+cards = [(k or None, int(n)) for k, n in re.findall(r"\[(?:'([^']+)'|null), (\d+)\]", block)]
 
 src = (ROOT / 'lib/aruco/aruco.js').read_text(encoding='utf-8')
 codes_block = re.search(r'ARUCO_MIP_36h12:\s*{.*?codeList:\s*\[(.*?)\]', src, re.S).group(1)
@@ -87,7 +75,8 @@ items = []
 mid = 1
 for key, n in cards:
     for _ in range(n):
-        items.append((mid, key))
+        if key:
+            items.append((mid, key))
         mid += 1
 
 per_page = COLS * ROWS
@@ -115,4 +104,4 @@ for p in range(n_pages):
 
 out = ROOT / 'repere/reperes-reactifs.pdf'
 pages[0].save(out, 'PDF', resolution=DPI, save_all=True, append_images=pages[1:])
-print(len(items), 'repères,', n_pages, 'pages :', ', '.join(f'{k}×{n}' for k, n in cards))
+print(len(items), 'repères,', n_pages, 'pages :', ', '.join(f'{k or "(désactivé)"}×{n}' for k, n in cards))

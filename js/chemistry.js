@@ -134,20 +134,31 @@ export const REACTIONS = RAW_REACTIONS.map(text => {
   return rx;
 });
 
-// Repères : un par réactif, autant d'exemplaires que son plus grand coefficient ; ids à partir de 1
-// (l'id 0 est le repère universel de la vue Atome).
-export const CARDS = [];
-for (const rx of REACTIONS) {
-  for (const { key, n } of rx.reactants) {
-    const c = CARDS.find(x => x.key === key);
-    if (!c) CARDS.push({ key, n });
-    else c.n = Math.max(c.n, n);
-  }
-}
+// Repères imprimés : [réactif, nombre d'exemplaires], ids à partir de 1 dans cet ordre
+// (l'id 0 est le repère universel de la vue Atome). Liste figée : des repères sont déjà imprimés,
+// ne jamais changer l'ordre ni retirer une ligne ; ajouter les nouveaux réactifs à la fin.
+// null : repère d'une espèce retirée (réactions à un seul réactif) ; ignoré, son id reste réservé.
+export const CARDS = [
+  ['H2', 3], ['O2', 3], ['C', 1], ['CH4', 1], ['Mg', 2], ['Na', 2], ['Cl2', 1], ['CaCO3', 1],
+  ['HCl', 2], ['N2', 1], ['S', 1], ['Al', 4], ['C2H6O', 1],
+  [null, 2],    // ex-H2O2 (eau oxygénée)
+  ['Ca(OH)2', 1], ['NaOH', 2], ['H2SO4', 1],
+  [null, 2],    // ex-KClO3 (chlorate de potassium)
+  ['CO', 2], ['Li', 4], ['H2O', 2], ['SO2', 2], ['Ca', 2],
+  [null, 1],    // ex-C6H12O6 (glucose)
+  ['CaO', 1], ['Mg(OH)2', 1], ['CO2', 1], ['SO3', 1], ['Na2CO3', 1], ['NaHCO3', 1], ['NH3', 1], ['Si', 1]
+];
 export const CARD_SPECIES = {};
 {
   let id = 1;
-  for (const { key, n } of CARDS) for (let i = 0; i < n; i++) CARD_SPECIES[id++] = key;
+  for (const [key, n] of CARDS) for (let i = 0; i < n; i++, id++) if (key) CARD_SPECIES[id] = key;
+}
+// Vérification : chaque réaction a assez de repères pour chacun de ses réactifs.
+for (const rx of REACTIONS) {
+  for (const { key, n } of rx.reactants) {
+    const have = CARDS.filter(c => c[0] === key).reduce((s, c) => s + c[1], 0);
+    if (have < n) console.warn(`Pas assez de repères ${key} pour : ${rx.text}`);
+  }
 }
 
 // Réaction dont les réactifs sont exactement ces espèces (signature : clés triées jointes par « + »).

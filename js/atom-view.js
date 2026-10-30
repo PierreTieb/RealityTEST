@@ -6,7 +6,7 @@
 // (un tremblement d'ensemble serait masqué par celui de la caméra).
 import * as THREE from 'three';
 import { getByZ, ionName, chargeText } from './elements.js';
-import { popScale, randomUnit, satin, SHRINK_TIME } from './util.js';
+import { popScale, randomUnit, satin, SHRINK_TIME, UNIVERSAL_MARKERS } from './util.js';
 
 const NUCLEON_R = 0.5;
 const ELECTRON_R = NUCLEON_R * 0.3;
@@ -95,7 +95,7 @@ function makeTrails(maxPoints) {
 }
 
 export class AtomView {
-  static searchLink = true;   // lien pour télécharger le repère universel sous « Montre le repère »
+  static markers = UNIVERSAL_MARKERS;   // repère proposé sous « Montre le repère » (fenêtre des repères, voir app.js)
 
   // ui : { card, controls }
   constructor(stage, ui) {

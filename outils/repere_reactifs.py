@@ -109,4 +109,7 @@ for p in range(n_pages):
 
 out = ROOT / 'repere/reperes-reactifs.pdf'
 pages[0].save(out, 'PDF', resolution=DPI, save_all=True, append_images=pages[1:])
+# Aperçu des pages pour la fenêtre des repères de l'appli (repere/reperes-reactifs-1.png, -2…).
+for i, page in enumerate(pages, 1):
+    page.resize((W // 2, H // 2), Image.LANCZOS).convert('L').save(ROOT / f'repere/reperes-reactifs-{i}.png', optimize=True)
 print(len(items), 'repères,', n_pages, 'pages :', ', '.join(f'{k or "(désactivé)"}×{n}' for k, n in cards))

@@ -68,6 +68,13 @@ export class ReactionView {
   static searchText = 'Montre les repères des réactifs à la caméra';
   static searchImage = false;
   static beforeOpen = requestMotion;   // pendant le toucher (autorisation du gyroscope sur iPhone)
+  static markers = {
+    link: 'Pas de repères ? Affiche-les ici',
+    title: 'Les repères des réactifs',
+    tip: 'Imprime la page à 100 % et découpe les repères le long des pointillés.',
+    images: ['repere/reperes-reactifs-1.png'],
+    pdf: 'repere/reperes-reactifs.pdf'
+  };
 
   constructor(stage, ui) {
     this.stage = stage;

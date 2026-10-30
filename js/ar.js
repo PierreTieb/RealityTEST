@@ -118,6 +118,8 @@ export class ArStage {
     const renderer = this.renderer = new THREE.WebGLRenderer({ canvas: els.canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setClearColor(0x000000, 0);
+    renderer.shadowMap.enabled = true;          // ombres portées (éclipses) : seules les lumières qui le demandent en font
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene = new THREE.Scene();
     const pmrem = new THREE.PMREMGenerator(renderer);
@@ -126,7 +128,7 @@ export class ArStage {
 
     // La caméra reste à l'origine : c'est le repère qui bouge.
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.01, 100);
-    const key = new THREE.DirectionalLight(0xffffff, 1.4);   // lumière « de face », attachée à la caméra
+    const key = this.keyLight = new THREE.DirectionalLight(0xffffff, 1.4);   // lumière « de face », attachée à la caméra
     key.position.set(-0.6, 1, 0.8);
     this.camera.add(key);
     this.scene.add(this.camera);

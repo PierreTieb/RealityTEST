@@ -4,8 +4,10 @@
 import { ArStage, cameraAvailable, startCamera, stopCamera, listCameras } from './ar.js';
 import { AtomView } from './atom-view.js';
 import { ReactionView } from './reaction-view.js';
+import { SkyView } from './sky-view.js';
+import { ChronoView } from './chrono-view.js';
 
-const VIEWS = { atom: AtomView, reaction: ReactionView };
+const VIEWS = { atom: AtomView, reaction: ReactionView, sky: SkyView, chrono: ChronoView };
 const SEARCH_TEXT = 'Montre le repère à la caméra';
 const $ = id => document.getElementById(id);
 
@@ -57,13 +59,15 @@ async function openView(name) {
   const View = VIEWS[name];
   $('ar-search-text').textContent = View.searchText || SEARCH_TEXT;
   $('ar-search-img').hidden = View.searchImage === false;
-  $('ar-search-link').hidden = !View.searchLink;
+  $('ar-search-link').hidden = !View.markers;
+  if (View.markers) $('ar-search-link').textContent = View.markers.link;
   stage.start();
   view = new View(stage, { card: $('ar-card'), controls: $('ar-controls'), layer: $('ar-layer') });
   updateCameraSwitch();
 }
 
 function closeView() {
+  $('marker-viewer').hidden = true;
   if (view) view.dispose();
   view = null;
   if (stage) stage.stop();
@@ -108,6 +112,21 @@ document.addEventListener('click', e => {
 
 $('camera-retry').addEventListener('click', () => openView(pendingView));
 $('camera-switch').addEventListener('click', switchCamera);
+
+// Fenêtre des repères (ouverte depuis « Pas de repère ? ») : images à viser sur un autre écran ou à imprimer.
+function showMarkers(open) {
+  const m = view && view.constructor.markers;
+  if (open && m) {
+    $('mv-title').textContent = m.title;
+    $('mv-tip').textContent = m.tip;
+    $('mv-pages').innerHTML = m.images.map(src => `<img src="${src}" alt="">`).join('');
+    $('mv-pdf').href = m.pdf;
+  }
+  $('marker-viewer').hidden = !(open && m);
+}
+$('ar-search-link').addEventListener('click', () => showMarkers(true));
+['mv-close', 'mv-back'].forEach(id => $(id).addEventListener('click', () => showMarkers(false)));
+$('marker-viewer').addEventListener('click', e => { if (e.target.id === 'marker-viewer') showMarkers(false); });
 
 // Pas de zoom au double appui (iPhone) : on peut taper vite sur les boutons.
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });

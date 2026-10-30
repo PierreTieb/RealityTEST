@@ -49,7 +49,6 @@
         <span class="q-card__title">Les atomes et les ions</span>
         <span class="q-card__sub">Construis un atome ou un ion, proton par proton</span>
       </button>
-        <a class="dl-btn" href="repere/repere-a-imprimer.pdf" download title="Télécharger le repère" aria-label="Télécharger le repère"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="26" height="26" rx="3" fill="#000"/><g fill="#fff"><rect x="8" y="8" width="5" height="5"/><rect x="16" y="8" width="8" height="5"/><rect x="8" y="16" width="5" height="8"/><rect x="16" y="19" width="5" height="5"/><rect x="19" y="14" width="5" height="3"/></g></svg></a>
       </div>
 
 
@@ -75,7 +74,47 @@
         <span class="q-card__title">Transformation chimique</span>
         <span class="q-card__sub">Pose les bons réactifs : les atomes se réarrangent sous tes yeux</span>
       </button>
-        <a class="dl-btn" href="repere/reperes-reactifs.pdf" download title="Télécharger les repères des réactifs" aria-label="Télécharger les repères des réactifs"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="26" height="26" rx="3" fill="#000"/><g fill="#fff"><rect x="8" y="8" width="5" height="5"/><rect x="16" y="8" width="8" height="5"/><rect x="8" y="16" width="5" height="8"/><rect x="16" y="19" width="5" height="5"/><rect x="19" y="14" width="5" height="3"/></g></svg></a>
+      </div>
+
+      <!-- Module 3 : la Terre au premier plan, éclairée seulement côté Soleil ; le Soleil brille au loin à droite -->
+      <div class="module">
+      <button type="button" class="q-card q-card--sky" data-view="sky">
+        <svg class="q-card__art" viewBox="0 0 320 120" aria-hidden="true">
+          <defs>
+            <radialGradient id="g-sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fffdf0"/><stop offset=".18" stop-color="#fff2b0"/><stop offset=".4" stop-color="#ffc94d" stop-opacity=".55"/><stop offset="1" stop-color="#ff9a1f" stop-opacity="0"/></radialGradient>
+            <radialGradient id="g-ocean" cx=".7" cy=".4" r=".8"><stop offset="0" stop-color="#5aa8ff"/><stop offset=".6" stop-color="#2a6fd0"/><stop offset="1" stop-color="#143c80"/></radialGradient>
+            <linearGradient id="g-night" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#02040c" stop-opacity=".96"/><stop offset=".48" stop-color="#02040c" stop-opacity=".9"/><stop offset=".62" stop-color="#02040c" stop-opacity="0"/></linearGradient>
+            <clipPath id="c-earth"><circle cx="78" cy="74" r="50"/></clipPath>
+          </defs>
+          <g id="sky-stars" fill="#fff"></g>
+          <g id="sun-rays" transform="translate(272 38)" stroke="#ffe38a" stroke-linecap="round" opacity=".7"></g>
+          <circle id="sun-glow" cx="272" cy="38" r="34" fill="url(#g-sun)"/>
+          <circle cx="272" cy="38" r="8.5" fill="#fffef5"/>
+          <g clip-path="url(#c-earth)">
+            <circle cx="78" cy="74" r="50" fill="url(#g-ocean)"/>
+            <g id="earth-land" fill="#58b04f"></g>
+            <circle cx="78" cy="74" r="50" fill="url(#g-night)"/>
+          </g>
+          <circle cx="78" cy="74" r="50" fill="none" stroke="#9fd0ff" stroke-opacity=".35" stroke-width="1.5"/>
+        </svg>
+        <span class="q-card__title">Système Soleil/Terre/Lune</span>
+        <span class="q-card__sub">Les phases de la Lune et les éclipses</span>
+      </button>
+      </div>
+
+      <!-- Module 4 : voiture vue de dessus qui laisse ses clichés derrière elle, puis tout s'efface en fondu -->
+      <div class="module">
+      <button type="button" class="q-card q-card--chrono" data-view="chrono">
+        <svg class="q-card__art" viewBox="0 0 320 120" aria-hidden="true">
+          <rect x="0" y="40" width="320" height="44" fill="#3a4148"/>
+          <path d="M0 41H320M0 83H320" stroke="#e8e8e8" stroke-width="2"/>
+          <path d="M0 62H320" stroke="#f2d84b" stroke-width="2" stroke-dasharray="14 10"/>
+          <g id="chrono-ghosts"></g>
+          <g id="chrono-car"></g>
+        </svg>
+        <span class="q-card__title">Chronophotographie</span>
+        <span class="q-card__sub">Les positions d'un objet à intervalles de temps réguliers</span>
+      </button>
       </div>
     </div>
   </section>
@@ -102,13 +141,27 @@
     <div class="ar-search" id="ar-search">
       <img id="ar-search-img" src="repere/repere.png" alt="">
       <span id="ar-search-text">Montre le repère à la caméra</span>
-      <a id="ar-search-link" href="repere/repere-a-imprimer.pdf" download hidden>Pas de repère ? Télécharge-le ici</a>
+      <button type="button" class="ar-search__link" id="ar-search-link">Pas de repère ? Affiche-le ici</button>
     </div>
     <div class="ar-top">
       <button class="chip" data-go="home">← Accueil</button>
       <button class="chip" id="camera-switch" hidden>Changer de caméra</button>
     </div>
     <div class="ar-controls" id="ar-controls"></div>
+
+    <!-- Repères à montrer ou à imprimer : fenêtre dans l'appli, avec de quoi la fermer -->
+    <div class="marker-viewer" id="marker-viewer" hidden>
+      <div class="marker-viewer__box">
+        <div class="marker-viewer__head">
+          <h2 id="mv-title"></h2>
+          <button type="button" class="marker-viewer__close" id="mv-close" aria-label="Fermer">✕</button>
+        </div>
+        <p class="marker-viewer__tip" id="mv-tip"></p>
+        <div class="marker-viewer__pages" id="mv-pages"></div>
+        <a class="btn btn--main" id="mv-pdf" target="_blank" rel="noopener">Ouvrir le PDF à imprimer</a>
+        <button type="button" class="btn btn--ghost" id="mv-back">Fermer</button>
+      </div>
+    </div>
   </section>
 
 </body>

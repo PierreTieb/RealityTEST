@@ -130,11 +130,74 @@
     };
   })();
 
+  // ---------- Carte « Soleil/Terre/Lune » : la Terre tourne (continents qui défilent), le Soleil scintille ----------
+  const drawSky = (() => {
+    const NS = 'http://www.w3.org/2000/svg';
+    let s = '';
+    for (let i = 0; i < 50; i++) s += `<circle cx="${(Math.random() * 320).toFixed(1)}" cy="${(Math.random() * 120).toFixed(1)}" r="${(.4 + Math.random() * .7).toFixed(1)}" fill-opacity="${(.2 + Math.random() * .6).toFixed(2)}"/>`;
+    $('sky-stars').innerHTML = s;
+    let r = '';
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * Math.PI * 2, l = i % 2 ? 26 : 38;
+      r += `<line x1="${(Math.cos(a) * 14).toFixed(1)}" y1="${(Math.sin(a) * 14).toFixed(1)}" x2="${(Math.cos(a) * l).toFixed(1)}" y2="${(Math.sin(a) * l).toFixed(1)}" stroke-width="${i % 2 ? 1.2 : 2}"/>`;
+    }
+    $('sun-rays').innerHTML = r;
+    // continents : taches dessinées deux fois de suite (largeur 200) pour un défilement sans couture
+    const land = $('earth-land');
+    const blobs = [[20, 50, 18, 12], [55, 85, 22, 16], [95, 60, 14, 20], [130, 95, 20, 10], [165, 55, 16, 14], [185, 88, 12, 9]];
+    for (const off of [0, 200]) for (const [x, y, rx, ry] of blobs) {
+      const e = document.createElementNS(NS, 'ellipse');
+      Object.entries({ cx: x + off, cy: y, rx, ry }).forEach(([k, v]) => e.setAttribute(k, v));
+      land.appendChild(e);
+    }
+    const rays = $('sun-rays'), glow = $('sun-glow');
+    return ms => {
+      land.setAttribute('transform', `translate(${(-(ms / 1000 * 8) % 200 + 28).toFixed(1)} 0)`);
+      rays.setAttribute('transform', `translate(272 38) rotate(${(ms / 1000 * 6 % 360).toFixed(1)})`);
+      glow.setAttribute('r', (34 + Math.sin(ms / 1000 * 2.4) * 2.5).toFixed(1));
+    };
+  })();
+
+  // ---------- Carte « Chronophotographie » : voiture vue de dessus qui laisse ses clichés, puis fondu ----------
+  const drawChrono = (() => {
+    const NS = 'http://www.w3.org/2000/svg';
+    const car = () => {
+      const g = document.createElementNS(NS, 'g');
+      g.innerHTML = '<rect x="-20" y="-11" width="40" height="22" rx="7" fill="#e63946"/>' +
+        '<rect x="2" y="-8.5" width="9" height="17" rx="3" fill="#2b3a55"/><rect x="-15" y="-8" width="6" height="16" rx="2.5" fill="#2b3a55"/>' +
+        '<rect x="-14" y="-13" width="8" height="3" rx="1" fill="#111"/><rect x="8" y="-13" width="8" height="3" rx="1" fill="#111"/>' +
+        '<rect x="-14" y="10" width="8" height="3" rx="1" fill="#111"/><rect x="8" y="10" width="8" height="3" rx="1" fill="#111"/>';
+      return g;
+    };
+    const main = car(), ghosts = $('chrono-ghosts');
+    $('chrono-car').appendChild(main);
+    const MOVE = 2.8, HOLD = .7, FADE = .6, STEP = .35, X0 = 22, X1 = 296;
+    let shots = 0, lastCycle = -1;
+    return ms => {
+      const T = MOVE + HOLD + FADE, cycle = Math.floor(ms / 1000 / T), t = ms / 1000 % T;
+      if (cycle !== lastCycle) { lastCycle = cycle; shots = 0; ghosts.innerHTML = ''; }
+      const u = Math.min(1, t / MOVE), x = X0 + (X1 - X0) * u * u;   // la voiture accélère : clichés de plus en plus espacés
+      while (shots * STEP <= Math.min(t, MOVE)) {
+        const s = shots * STEP / MOVE, g = car();
+        g.setAttribute('transform', `translate(${(X0 + (X1 - X0) * s * s).toFixed(1)} 62)`);
+        g.setAttribute('opacity', '.35');
+        ghosts.appendChild(g);
+        shots++;
+      }
+      main.setAttribute('transform', `translate(${x.toFixed(1)} 62)`);
+      const fade = t > MOVE + HOLD ? 1 - (t - MOVE - HOLD) / FADE : 1;
+      ghosts.setAttribute('opacity', fade.toFixed(2));
+      main.setAttribute('opacity', fade.toFixed(2));
+    };
+  })();
+
   drawAtom(0);
   drawReaction(0);
+  drawSky(0);
+  drawChrono(2600);
   if (still) return;
   const loop = ms => {
-    if (visible()) { drawAtom(ms); drawReaction(ms); }
+    if (visible()) { drawAtom(ms); drawReaction(ms); drawSky(ms); drawChrono(ms); }
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);

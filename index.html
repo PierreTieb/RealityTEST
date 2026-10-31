@@ -7,21 +7,51 @@
   <title>La réalité augmentée</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <!-- ?v= : à changer après une modification, pour que les téléphones ne gardent pas l'ancienne version en cache -->
+  <link rel="stylesheet" href="css/style.css?v=3">
   <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
   <script src="lib/aruco/cv.js"></script>
   <script src="lib/aruco/svd.js"></script>
   <script src="lib/aruco/posit1.js"></script>
   <script src="lib/aruco/aruco.js"></script>
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=3"></script>
   <script src="js/home.js" defer></script>
 </head>
 <body>
+
+  <!-- Repère universel (ArUco MIP_36h12, id 0), dessiné case par case d'après repere/repere.png : 8 × 8 cases noires
+       dans une marge blanche d'une case. En SVG plutôt qu'en image : sur iPhone, l'image PNG disparaissait ou ne s'affichait pas. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="repere-0" viewBox="0 0 10 10">
+      <rect width="10" height="10" fill="#fff"/>
+      <path fill="#000" shape-rendering="crispEdges" d="M1 1h8v1h-8zM1 2h1v7h-1zM8 2h1v7h-1zM2 8h6v1h-6zM4 2h1v1h-1zM6 2h2v1h-2zM3 3h1v1h-1zM5 3h1v1h-1zM2 4h1v1h-1zM5 4h3v1h-3zM5 5h1v1h-1zM7 5h1v1h-1zM2 6h4v1h-4zM7 6h1v1h-1zM2 7h1v1h-1zM6 7h1v1h-1z"/>
+    </symbol>
+  </svg>
 
   <!-- ===== Accueil : choix du module ===== -->
   <section class="screen screen--home screen--active" id="screen-home">
     <div id="home-bg" aria-hidden="true"></div>
     <div class="home-in">
+      <!-- Bouton du repère : l'afficher en grand (à viser avec un autre appareil) ou télécharger le PDF à imprimer -->
+      <div class="home-top">
+        <button type="button" class="marker-btn" id="marker-btn" aria-label="Le repère : l'afficher ou l'imprimer" aria-expanded="false" aria-controls="marker-menu">
+          <svg width="38" height="38" viewBox="0 0 10 10" aria-hidden="true"><use href="#repere-0"/></svg>
+        </button>
+        <div class="marker-menu" id="marker-menu" hidden>
+          <button type="button" class="marker-menu__item" id="marker-show-open">
+            <b>Afficher le repère</b>
+            <span>En grand sur cet écran, pour le viser avec la caméra d'un autre appareil</span>
+          </button>
+          <button type="button" class="marker-menu__item" data-pdf="repere/repere-a-imprimer.pdf" data-name="Repère de réalité augmentée.pdf">
+            <b>Imprimer le repère</b>
+            <span>Télécharge le PDF : atomes, Soleil/Terre/Lune, chronophotographie</span>
+          </button>
+          <button type="button" class="marker-menu__item" data-pdf="repere/reperes-reactifs.pdf" data-name="Repères des réactifs.pdf">
+            <b>Imprimer les repères des réactifs</b>
+            <span>Télécharge le PDF à découper : transformation chimique</span>
+          </button>
+        </div>
+      </div>
       <h1 class="app-title">La réalité augmentée</h1>
       <p class="app-subtitle">Travailler et découvrir avec une vue 3D en temps réel</p>
 
@@ -148,21 +178,14 @@
       <button class="chip" id="camera-switch" hidden>Changer de caméra</button>
     </div>
     <div class="ar-controls" id="ar-controls"></div>
-
-    <!-- Repères à montrer ou à imprimer : fenêtre dans l'appli, avec de quoi la fermer -->
-    <div class="marker-viewer" id="marker-viewer" hidden>
-      <div class="marker-viewer__box">
-        <div class="marker-viewer__head">
-          <h2 id="mv-title"></h2>
-          <button type="button" class="marker-viewer__close" id="mv-close" aria-label="Fermer">✕</button>
-        </div>
-        <p class="marker-viewer__tip" id="mv-tip"></p>
-        <div class="marker-viewer__pages" id="mv-pages"></div>
-        <a class="btn btn--main" id="mv-pdf" target="_blank" rel="noopener">Ouvrir le PDF à imprimer</a>
-        <button type="button" class="btn btn--ghost" id="mv-back">Fermer</button>
-      </div>
-    </div>
   </section>
+
+  <!-- Repère affiché en grand (menu du repère > Afficher) -->
+  <div class="marker-show" id="marker-show" hidden>
+    <svg width="300" height="300" viewBox="0 0 10 10" role="img" aria-label="Repère de réalité augmentée"><use href="#repere-0"/></svg>
+    <p>Vise ce repère avec la caméra d'un autre appareil</p>
+    <button type="button" class="marker-show__close" id="marker-show-close">✕ Fermer</button>
+  </div>
 
 </body>
 </html>

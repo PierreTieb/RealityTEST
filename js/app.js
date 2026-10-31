@@ -67,7 +67,6 @@ async function openView(name) {
 }
 
 function closeView() {
-  $('marker-viewer').hidden = true;
   if (view) view.dispose();
   view = null;
   if (stage) stage.stop();
@@ -113,20 +112,51 @@ document.addEventListener('click', e => {
 $('camera-retry').addEventListener('click', () => openView(pendingView));
 $('camera-switch').addEventListener('click', switchCamera);
 
-// Fenêtre des repères (ouverte depuis « Pas de repère ? ») : images à viser sur un autre écran ou à imprimer.
-function showMarkers(open) {
-  const m = view && view.constructor.markers;
-  if (open && m) {
-    $('mv-title').textContent = m.title;
-    $('mv-tip').textContent = m.tip;
-    $('mv-pages').innerHTML = m.images.map(src => `<img src="${src}" alt="">`).join('');
-    $('mv-pdf').href = m.pdf;
-  }
-  $('marker-viewer').hidden = !(open && m);
+// ---------- Repère : bouton carré en haut à droite de l'accueil ----------
+// « Afficher » : le repère en grand sur cet écran ; « Imprimer » : téléchargement du PDF (jamais ouvert dans l'appli :
+// dans l'appli installée, la page du PDF remplaçait l'appli, sans retour possible).
+function showMarkerMenu(open) {
+  $('marker-menu').hidden = !open;
+  $('marker-btn').setAttribute('aria-expanded', open);
 }
-$('ar-search-link').addEventListener('click', () => showMarkers(true));
-['mv-close', 'mv-back'].forEach(id => $(id).addEventListener('click', () => showMarkers(false)));
-$('marker-viewer').addEventListener('click', e => { if (e.target.id === 'marker-viewer') showMarkers(false); });
+$('marker-btn').addEventListener('click', () => showMarkerMenu($('marker-menu').hidden));
+document.addEventListener('click', e => {
+  if (!e.target.closest('#marker-menu, #marker-btn, #ar-search-link')) showMarkerMenu(false);
+});
+$('marker-show-open').addEventListener('click', () => { showMarkerMenu(false); $('marker-show').hidden = false; });
+$('marker-show-close').addEventListener('click', () => { $('marker-show').hidden = true; });
+
+async function downloadPdf(url, name) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(await res.blob());
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  } catch (err) {
+    alert("Le PDF n'a pas pu être téléchargé. Vérifie la connexion, puis réessaie.");
+  }
+}
+document.querySelectorAll('[data-pdf]').forEach(b => b.addEventListener('click', () => {
+  showMarkerMenu(false);
+  downloadPdf(b.dataset.pdf, b.dataset.name);
+}));
+
+// « Pas de repère ? » dans un module : retour à l'accueil, menu du repère ouvert (on peut aussi y changer de module).
+$('ar-search-link').addEventListener('click', () => {
+  closeView();
+  showScreen('home');
+  $('screen-home').scrollTop = 0;
+  showMarkerMenu(true);
+  const btn = $('marker-btn');
+  btn.classList.remove('is-calling');
+  void btn.offsetWidth;
+  btn.classList.add('is-calling');
+});
 
 // Pas de zoom au double appui (iPhone) : on peut taper vite sur les boutons.
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });

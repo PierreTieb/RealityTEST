@@ -95,7 +95,7 @@ function makeTrails(maxPoints) {
 }
 
 export class AtomView {
-  static markers = UNIVERSAL_MARKERS;   // repère proposé sous « Montre le repère » (fenêtre des repères, voir app.js)
+  static markers = UNIVERSAL_MARKERS;   // lien sous « Montre le repère » vers le menu du repère (voir app.js)
 
   // ui : { card, controls }
   constructor(stage, ui) {

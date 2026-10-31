@@ -39,7 +39,7 @@ export class FreeLook {
     let last = null;
     const opts = { signal: this.abort.signal };
     el.addEventListener('pointerdown', e => {
-      if (!this.active || e.target.closest('button, a, .rx-catalog, .marker-viewer')) return;
+      if (!this.active || e.target.closest('button, a, .rx-catalog')) return;
       last = { x: e.clientX, y: e.clientY, id: e.pointerId };
     }, opts);
     el.addEventListener('pointermove', e => {

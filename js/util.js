@@ -24,11 +24,5 @@ export function satin(color) {
   });
 }
 
-// Repère universel (id 0), proposé sous « Montre le repère » dans les modules qui l'utilisent.
-export const UNIVERSAL_MARKERS = {
-  link: 'Pas de repère ? Affiche-le ici',
-  title: 'Le repère',
-  tip: "Imprime-le, ou affiche cette page sur un autre écran (téléphone d'un camarade, ordinateur) et vise-la avec la caméra.",
-  images: ['repere/repere.png'],
-  pdf: 'repere/repere-a-imprimer.pdf'
-};
+// Lien sous « Montre le repère » : ramène à l'accueil et ouvre le menu du repère (afficher / imprimer).
+export const UNIVERSAL_MARKERS = { link: 'Pas de repère ? Affiche-le ou imprime-le' };

@@ -15,6 +15,11 @@ const DETECT_SIZE = 640;    // grand côté de l'image analysée (px)
 const DETECT_SIZE_MULTI = 960;
 const HOLD_TIME = 3000;     // repère caché : l'objet reste affiché pendant 3 s
 const SMOOTH = 0.5;         // lissage des mouvements (0 = figé, 1 = brut)
+// Contre les faux repères (textures, ombres lues comme un code) : au plus 2 bits faux sur 36
+// (par défaut la bibliothèque en tolère 11), et un nouveau repère doit être vu sur 3 images de suite.
+const MAX_BIT_ERRORS = 2;
+const CONFIRM_HITS = 3;
+const CONFIRM_GAP = 300;    // ms sans le voir : on recommence à compter
 
 // ---------- Caméra ----------
 
@@ -52,7 +57,7 @@ export async function listCameras() {
 
 class MarkerTracker {
   constructor() {
-    this.detector = new window.AR.Detector({ dictionaryName: 'ARUCO_MIP_36h12' });
+    this.detector = new window.AR.Detector({ dictionaryName: 'ARUCO_MIP_36h12', maxHammingDistance: MAX_BIT_ERRORS + 1 });
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
     this.posit = null;
@@ -113,6 +118,7 @@ export class ArStage {
     this.tracker = new MarkerTracker();
     this.multi = false;
     this.markers = new Map();
+    this.pending = new Map();   // repères pas encore confirmés : id -> { hits, lastSeen }
     this.hold = false;          // une vue peut garder sa scène affichée sans repère (mode libre)
 
     const renderer = this.renderer = new THREE.WebGLRenderer({ canvas: els.canvas, alpha: true, antialias: true });
@@ -154,6 +160,7 @@ export class ArStage {
     this.lastSeen = -Infinity;
     this.anchor.visible = false;
     this.markers.clear();
+    this.pending.clear();
     this._setFound(false, true);
     this._last = performance.now();
     this._lastVideoTime = -1;
@@ -234,6 +241,7 @@ export class ArStage {
   }
 
   // Mode plusieurs repères : this.markers garde chaque repère vu depuis moins de 3 s.
+  // Un repère n'y entre qu'après CONFIRM_HITS images de suite (this.pending compte les vues).
   _trackAll(now, src, sw, sh) {
     for (const f of this.tracker.detectAll(src, sw, sh)) {
       const pos = new THREE.Vector3(), quat = new THREE.Quaternion();
@@ -243,10 +251,18 @@ export class ArStage {
         m.position.lerp(pos, SMOOTH);
         m.quaternion.slerp(quat, SMOOTH);
         m.lastSeen = now;
-      } else {
+        continue;
+      }
+      const p = this.pending.get(f.id);
+      const hits = p && now - p.lastSeen < CONFIRM_GAP ? p.hits + 1 : 1;
+      if (hits >= CONFIRM_HITS) {
+        this.pending.delete(f.id);
         this.markers.set(f.id, { id: f.id, position: pos, quaternion: quat, lastSeen: now });
+      } else {
+        this.pending.set(f.id, { hits, lastSeen: now });
       }
     }
+    for (const [id, p] of this.pending) if (now - p.lastSeen > CONFIRM_GAP) this.pending.delete(id);
     for (const [id, m] of this.markers) if (now - m.lastSeen > HOLD_TIME) this.markers.delete(id);
     this._setFound(this.markers.size > 0 || this.hold);
   }
@@ -255,6 +271,7 @@ export class ArStage {
   setMulti(on) {
     this.multi = on;
     this.markers.clear();
+    this.pending.clear();
     this.tracker.detectSize = on ? DETECT_SIZE_MULTI : DETECT_SIZE;
   }
 
